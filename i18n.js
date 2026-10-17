@@ -242,8 +242,10 @@ window.JEREBU_I18N = {
     refreshed: "Updated",
     upToDate: "Already up to date",
     checkedAt: (t) => `Last checked ${t}`,
+    visitors: (live, total) => `${live} online now · ${total} ${total === "1" ? "visitor" : "visitors"} in total`,
+    visitorsLabel: "Visitors",
     pullToRefresh: "Pull to refresh",
-    privacy: "Your location stays on your phone. It is only sent to IQAir, rounded to about 1 km, when you're outside DOE coverage.",
+    privacy: "Your location stays on your phone. It is only sent to IQAir, rounded to about 1 km, when you're outside DOE coverage. Visitor counts use an anonymous random ID.",
     srReading: (v, u, label) => `${u} ${v}, ${label}`,
 
     // Alerts
@@ -499,8 +501,10 @@ window.JEREBU_I18N = {
     refreshed: "Dikemas kini",
     upToDate: "Sudah terkini",
     checkedAt: (t) => `Kali terakhir disemak ${t}`,
+    visitors: (live, total) => `${live} dalam talian · ${total} pelawat keseluruhan`,
+    visitorsLabel: "Pelawat",
     pullToRefresh: "Tarik untuk muat semula",
-    privacy: "Lokasi anda kekal dalam telefon anda. Ia hanya dihantar kepada IQAir, dibundarkan kira-kira 1 km, apabila anda di luar liputan JAS.",
+    privacy: "Lokasi anda kekal dalam telefon anda. Ia hanya dihantar kepada IQAir, dibundarkan kira-kira 1 km, apabila anda di luar liputan JAS. Kiraan pelawat menggunakan ID rawak tanpa nama.",
     srReading: (v, u, label) => `${u} ${v}, ${label}`,
 
     alerts: "Amaran",

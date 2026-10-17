@@ -24,6 +24,19 @@ to set.
 
 The bell button then appears in the app.
 
+## Visitor counts (live and total)
+
+The footer's "online now" and "visitors in total" come from the same Worker.
+
+1. **Storage & Databases → D1 SQL Database → Create**, name it `jerebunow-stats`.
+2. In the Worker: **Settings → Bindings → Add → D1 database**, variable name `DB`, database `jerebunow-stats`.
+3. Paste the latest `worker.js` and **Deploy**. Tables are created automatically.
+
+Each browser gets a random anonymous ID; no IP or location is stored. "Online now"
+means seen in the last 5 minutes (the app checks in every 2 minutes while open).
+D1's free plan allows 100,000 row writes a day; a new visitor costs 2 writes and a
+returning one at most 1 per check-in.
+
 ## Free plan limits
 
 KV allows 1,000 writes and 100,000 reads a day. The Worker only writes when a

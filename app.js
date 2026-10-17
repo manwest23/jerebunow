@@ -587,10 +587,49 @@
     return `<footer class="foot">
       ${langSwitch()}
       <p class="checked">${checkedText()}</p>
+      <p class="visitors"${visitorsHTML() ? "" : " hidden"}>${visitorsHTML()}</p>
       ${src}
       <p class="privacy">${T.privacy}</p>
       <p class="credit">${T.developedBy} <b>manwest</b></p>
     </footer>`;
+  }
+
+  /* ---------- Live and total visitors (Cloudflare Worker + D1) ---------- */
+  const STATS_URL = ((window.JEREBU_CONFIG && window.JEREBU_CONFIG.statsUrl) || "").replace(/\/$/, "");
+  const VID_KEY = "jerebunow.vid";
+  let visitorStats = null, statsTimer = 0;
+  function visitorId() {
+    let id = store.get(VID_KEY, null);
+    if (typeof id !== "string" || !/^[0-9a-f-]{36}$/i.test(id)) {
+      id = (crypto.randomUUID && crypto.randomUUID()) ||
+        "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16));
+      store.set(VID_KEY, id);
+    }
+    return id;
+  }
+  function visitorsHTML() {
+    if (!visitorStats) return "";
+    const n = (v) => Number(v).toLocaleString(T.locale);
+    return `<i class="live-dot" aria-hidden="true"></i>${esc(T.visitors(n(visitorStats.live), n(visitorStats.total)))}`;
+  }
+  function paintVisitors() {
+    const html = visitorsHTML();
+    document.querySelectorAll(".foot .visitors").forEach((el) => { el.innerHTML = html; el.hidden = !html; });
+  }
+  async function checkIn() {
+    if (!STATS_URL || document.hidden) return;
+    try {
+      const res = await fetch(STATS_URL + "/hit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: visitorId() }) });
+      if (!res.ok) return;                         // counter not set up yet: stay hidden
+      const s = await res.json();
+      if (Number.isFinite(s.live) && Number.isFinite(s.total)) { visitorStats = s; paintVisitors(); }
+    } catch { /* offline: keep the last numbers */ }
+  }
+  function startCheckIns() {
+    if (!STATS_URL) return;
+    checkIn();
+    clearInterval(statsTimer);
+    statsTimer = setInterval(checkIn, 2 * 60 * 1000);   // only while the app is open (checkIn skips hidden)
   }
 
   function checkedText() {
@@ -918,6 +957,7 @@
     store.set(LANG_KEY, lang);
     render(true);
     if ($("installSheet").classList.contains("open")) renderInstall();
+    paintVisitors();
     syncAlertsBtn(); syncAlertsLang();
     if (window.JerebuMap?.isOpen()) window.JerebuMap.update(mapContext());
   }
@@ -1380,7 +1420,7 @@
   $("search").addEventListener("input", (ev) => renderSearch(ev.target.value));
   let rz;
   window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => goTo(state.page, false), 120); });
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { refresh(); checkIn(); } });
 
   /* ---------- Text size: follow the iPhone's Text Size setting ----------
      Safari exposes it through the "-apple-system-body" font (17px at the
@@ -1417,6 +1457,7 @@
   [$("listView"), $("mapView"), sheet, $("installSheet"), $("alertsSheet")].forEach((v) => setView(v, false));
   syncInstallBtn();
   syncAlertsBtn();
+  startCheckIns();
   renderChrome();
 
   refresh().then((ok) => { if (ok) locate(); });

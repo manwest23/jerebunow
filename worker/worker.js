@@ -4,8 +4,12 @@
    - GET  /vapid        public key the app needs to subscribe
    - Cron (hourly)      read the latest DOE data and send a notification when a
                         station crosses a level someone asked about
+   - POST /hit          visitor check-in {id}; returns { live, total }
+   - GET  /stats        { live, total } without checking in
    Needs one KV namespace bound as SUBS. Signing keys (VAPID) are created on
    first use and kept in KV, so there are no secrets to set up.
+   Visitor counts need a D1 database bound as DB (tables are created
+   automatically). IDs are random and anonymous; no IP or location is kept.
    Developed by manwest. */
 
 const SITE = "https://manwest23.github.io/jerebunow/";
@@ -148,12 +152,62 @@ function message(lang, rule, name, api, station) {
   return { title, body, tag: `jerebunow-${station}`, url: SITE };
 }
 
+/* ---------- Visitor counter (D1) ----------
+   visitors: one row per anonymous ID, with when it was last seen.
+   counters: the running total of distinct visitors (so totals never need a
+   full table scan). "Live" = seen in the last 5 minutes, read via an index. */
+const LIVE_MS = 5 * 60 * 1000;
+const ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+let schemaReady = false;
+async function ensureSchema(db) {
+  if (schemaReady) return;
+  await db.batch([
+    db.prepare("CREATE TABLE IF NOT EXISTS visitors (id TEXT PRIMARY KEY, first_seen INTEGER NOT NULL, last_seen INTEGER NOT NULL)"),
+    db.prepare("CREATE INDEX IF NOT EXISTS visitors_last_seen ON visitors (last_seen)"),
+    db.prepare("CREATE TABLE IF NOT EXISTS counters (k TEXT PRIMARY KEY, v INTEGER NOT NULL)")
+  ]);
+  schemaReady = true;
+}
+async function visitorStats(env, id) {
+  const db = env.DB;
+  await ensureSchema(db);
+  const now = Date.now();
+  if (id) {
+    const ins = await db.prepare("INSERT OR IGNORE INTO visitors (id, first_seen, last_seen) VALUES (?1, ?2, ?2)").bind(id, now).run();
+    if (ins.meta && ins.meta.changes === 1) {
+      await db.prepare("INSERT INTO counters (k, v) VALUES ('total', 1) ON CONFLICT(k) DO UPDATE SET v = v + 1").run();
+    } else {
+      // Returning visitor: refresh at most once a minute to save writes
+      await db.prepare("UPDATE visitors SET last_seen = ?2 WHERE id = ?1 AND last_seen < ?3").bind(id, now, now - 60000).run();
+    }
+  }
+  const [live, total] = await db.batch([
+    db.prepare("SELECT COUNT(*) AS n FROM visitors WHERE last_seen > ?1").bind(now - LIVE_MS),
+    db.prepare("SELECT v FROM counters WHERE k = 'total'")
+  ]);
+  const liveN = (live.results && live.results[0] && live.results[0].n) || 0;
+  const totalN = (total.results && total.results[0] && total.results[0].v) || 0;
+  return { live: Math.max(liveN, id ? 1 : 0), total: Math.max(totalN, liveN) };
+}
+
 /* ---------- HTTP ---------- */
 async function handle(req, env) {
   const url = new URL(req.url);
   const origin = req.headers.get("origin") || "*";
   if (req.method === "OPTIONS") return json({}, 204, origin);
   if (url.pathname === "/vapid") return json({ publicKey: (await vapid(env)).publicKey }, 200, origin);
+
+  if (url.pathname === "/hit" || url.pathname === "/stats") {
+    if (!env.DB) return json({ error: "no_db" }, 503, origin);
+    let id = null;
+    if (req.method === "POST" && url.pathname === "/hit") {
+      let b; try { b = await req.json(); } catch { return json({ error: "bad_json" }, 400, origin); }
+      id = b && typeof b.id === "string" && ID_RE.test(b.id) ? b.id.toLowerCase() : null;
+      if (!id) return json({ error: "bad_id" }, 400, origin);
+    }
+    try { return json(await visitorStats(env, id), 200, origin); }
+    catch (e) { return json({ error: "db_error" }, 500, origin); }
+  }
 
   if (req.method === "POST" && url.pathname === "/subscribe") {
     let b; try { b = await req.json(); } catch { return json({ error: "bad_json" }, 400, origin); }

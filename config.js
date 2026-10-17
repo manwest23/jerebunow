@@ -7,5 +7,7 @@ window.JEREBU_CONFIG = {
   iqairKey: "5a9c1979-25bf-4ae1-9ad3-c0396cf3d001",
   // Haze alerts: the URL of your Cloudflare Worker (see worker/README.md).
   // Leave empty to hide alerts.
-  alertsUrl: "https://jerebunow-alerts.luqmanharriz23.workers.dev"
+  alertsUrl: "https://jerebunow-alerts.luqmanharriz23.workers.dev",
+  // Live and total visitor counts (same Worker; needs its D1 database).
+  statsUrl: "https://jerebunow-alerts.luqmanharriz23.workers.dev"
 };

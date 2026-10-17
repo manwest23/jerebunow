@@ -5,19 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#1b2433">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="JerebuNow">
+  <meta name="description" content="Malaysian haze and Air Pollutant Index (API / IPU) near you, with running advice and forecast. Bahasa Melayu &amp; English.">
   <title>JerebuNow</title>
+  <link rel="preconnect" href="https://basemaps.cartocdn.com" crossorigin>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <!-- Swipeable location pages -->
-  <div class="pager" id="pager" aria-label="Locations"></div>
+  <main class="pager" id="pager" aria-label="Locations"></main>
 
   <!-- Floating bottom bar -->
-  <nav class="toolbar" id="toolbar" aria-label="Navigation">
-    <button class="tb-btn" id="addBtn" type="button" aria-label="Add a location">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+  <nav class="toolbar" id="toolbar">
+    <button class="tb-btn" id="mapBtn" type="button" aria-label="Air quality map">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4.5 3.5 6.5v13L9 17.5l6 2 5.5-2v-13L15 6.5l-6-2Z"/><path d="M9 4.5v13M15 6.5v13"/></svg>
     </button>
     <div class="dots" id="dots" role="tablist" aria-label="Pages"></div>
     <button class="tb-btn" id="listBtn" type="button" aria-label="All locations">
@@ -26,41 +29,48 @@
   </nav>
 
   <!-- Locations list -->
-  <section class="listview" id="listView" hidden aria-labelledby="listTitle">
+  <section class="listview view" id="listView" aria-labelledby="listTitle">
     <div class="list-inner">
       <div class="list-top">
         <h1 id="listTitle">Jerebu<b>Now</b></h1>
-        <button class="more-btn" id="editBtn" type="button" aria-label="Edit list">Edit</button>
+        <button class="more-btn" id="editBtn" type="button">Edit</button>
       </div>
       <ul class="loc-cards" id="locCards"></ul>
       <footer class="foot">
+        <div id="listLang"></div>
         <p id="listSource">&nbsp;</p>
-        <p class="credit">Developed by <b>manwest</b></p>
+        <p class="credit" id="listCredit">Developed by <b>manwest</b></p>
       </footer>
     </div>
     <button class="searchbar" id="searchOpen" type="button">
       <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.8"/><path d="m10.5 10.5 3.5 3.5"/></svg>
-      <span>Search for a station or state</span>
+      <span id="searchLabel">Search for a station or state</span>
     </button>
   </section>
 
+  <!-- Air quality map (map.js fills it on first open) -->
+  <section class="mapview view" id="mapView" aria-label="Map">
+    <p class="map-status" aria-live="polite"></p>
+  </section>
+
   <!-- Station search sheet -->
-  <div class="sheet-wrap" id="sheet" hidden>
+  <div class="sheet-wrap view" id="sheet">
     <div class="sheet-backdrop" data-close></div>
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
       <div class="grabber" aria-hidden="true"></div>
       <div class="sheet-top">
         <h2 id="sheetTitle">Add a location</h2>
-        <button class="link-btn" type="button" data-close>Cancel</button>
+        <button class="link-btn" id="sheetCancel" type="button" data-close>Cancel</button>
       </div>
       <label class="search">
         <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.8"/><path d="m10.5 10.5 3.5 3.5"/></svg>
-        <input id="search" type="search" placeholder="Search station or state" autocomplete="off">
+        <input id="search" type="search" placeholder="Search station or state" autocomplete="off" enterkeyhint="search">
       </label>
       <ul class="list list-sheet" id="allList"></ul>
     </div>
   </div>
 
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

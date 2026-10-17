@@ -132,7 +132,11 @@ async function fetchForecasts() {
       for (const r of await res.json()) {
         const name = r.location?.location_name;
         if (!name) continue;
-        (groups[name] ??= { location: name, type: prefix, days: [] }).days.push({
+        // A name can exist as both a state and a district; keep the first type seen.
+        const g = (groups[name] ??= { location: name, type: prefix, id: r.location?.location_id, days: [] });
+        if (g.id !== r.location?.location_id) continue;
+        if (g.days.some((d) => d.date === r.date)) continue;
+        g.days.push({
           date: r.date,
           morning: r.morning_forecast, afternoon: r.afternoon_forecast, night: r.night_forecast,
           summary: r.summary_forecast, summary_when: r.summary_when,

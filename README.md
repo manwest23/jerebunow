@@ -1,6 +1,6 @@
 # JerebuNow
 
-A small web app that shows the Malaysian Air Pollutant Index (API / IPU) for the DOE monitoring station nearest to you, tells you whether it is a good time to run outside, and shows MET Malaysia's 7-day forecast. Styled like an iOS app. Plain HTML, CSS and JavaScript, no build step.
+A small web app that shows the Malaysian Air Pollutant Index (API / IPU) for the DOE monitoring station nearest to you, tells you whether it is a good time to run outside, shows MET Malaysia's 7-day forecast and an air quality map. Styled like Apple Weather, in English and Bahasa Melayu. Plain HTML, CSS and JavaScript, no build step.
 
 ## Files
 
@@ -8,7 +8,9 @@ A small web app that shows the Malaysian Air Pollutant Index (API / IPU) for the
 | --- | --- |
 | `index.html` | Page structure |
 | `style.css` | Apple-style look: system font, frosted glass cards, sky gradient tinted by API band |
-| `app.js` | Loads `data/api.json`, finds your nearest station with the Geolocation API, renders everything |
+| `app.js` | Loads `data/api.json`, finds your nearest station, renders the swipeable pages and locations list |
+| `i18n.js` | All text in English and Bahasa Melayu |
+| `map.js` | Air quality map, loaded on first open |
 | `data/api.json` | Station readings. Ships with **sample data**; replaced by the fetch script |
 | `scripts/fetch-apims.mjs` | Pulls live readings from DOE APIMS plus the MET Malaysia forecast, and writes `data/api.json` with a rolling 24 h history |
 | `.github/workflows/update-api.yml` | Runs the fetch script every hour on GitHub Actions |
@@ -51,6 +53,12 @@ When conditions aren't good, it suggests the next dry window from the forecast.
 ## Forecast
 
 The 7-day forecast comes from MET Malaysia through the government open data API (`https://api.data.gov.my/weather/forecast`, no key needed). Each station uses a forecast location with the same name, otherwise its state. To pin a station to a specific district or town, add it to `FORECAST_OVERRIDES` in the script. DOE does not publish an API (haze) forecast, so the forecast covers weather only.
+
+## Map
+
+The map uses MapLibre GL with the CARTO Dark Matter basemap (OpenStreetMap data). Its colour layer is interpolated from the DOE station readings and fades out away from stations, so it shows where readings exist rather than inventing values over open sea. The timeline replays each station's last 24 hourly readings.
+
+Attribution for the basemap (© OpenStreetMap contributors, © CARTO) is shown in the map corner and must stay.
 
 ## API bands (DOE)
 

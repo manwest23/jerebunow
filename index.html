@@ -10,12 +10,21 @@
   <meta name="apple-mobile-web-app-title" content="JerebuNow">
   <meta name="description" content="Malaysian haze and Air Pollutant Index (API / IPU) near you, with running advice and forecast. Bahasa Melayu &amp; English.">
   <title>JerebuNow</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="preconnect" href="https://basemaps.cartocdn.com" crossorigin>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <!-- Swipeable location pages -->
   <main class="pager" id="pager" aria-label="Locations"></main>
+
+  <!-- Add to Home Screen (hidden once installed) -->
+  <button class="tb-btn install-btn" id="installBtn" type="button" aria-label="Add to Home Screen" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4.5"/><path d="M12 8.5v7M8.5 12h7"/></svg>
+  </button>
 
   <!-- Floating bottom bar -->
   <nav class="toolbar" id="toolbar">
@@ -67,6 +76,20 @@
         <input id="search" type="search" placeholder="Search station or state" autocomplete="off" enterkeyhint="search">
       </label>
       <ul class="list list-sheet" id="allList"></ul>
+    </div>
+  </div>
+
+  <!-- Add to Home Screen instructions -->
+  <div class="sheet-wrap view" id="installSheet">
+    <div class="sheet-backdrop" data-close-install></div>
+    <div class="sheet sheet-short" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+      <div class="grabber" aria-hidden="true"></div>
+      <div class="install-head">
+        <img src="icons/icon-192.png" alt="" width="64" height="64">
+        <div><h2 id="installTitle">Add JerebuNow to your Home Screen</h2><p id="installSub"></p></div>
+      </div>
+      <ol class="install-steps" id="installSteps"></ol>
+      <button class="pill install-done" id="installDone" type="button" data-close-install>OK</button>
     </div>
   </div>
 

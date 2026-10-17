@@ -216,6 +216,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 }
 .toolbar > * { pointer-events: auto; }
 body.list-open .pager, body.map-open .pager { transform: scale(.94); opacity: .4; }
+body.list-open .install-btn, body.map-open .install-btn { opacity: 0; transform: scale(.8); pointer-events: none; }
 body.list-open .toolbar, body.map-open .toolbar { transform: translateY(24px); opacity: 0; pointer-events: none; }
 body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; }
 .tb-btn:active, .dot-btn:active, .loc-open:active, .row:active, .pill:active, .more-btn:active { transform: scale(.96); }
@@ -464,3 +465,26 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* ---------- Add to Home Screen ---------- */
+.install-btn {
+  position: fixed; z-index: 6;
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  right: max(16px, env(safe-area-inset-right, 0px));
+  width: 44px; height: 44px;
+  transition: opacity .25s ease, transform .3s cubic-bezier(.2,.8,.2,1);
+}
+.install-btn svg { width: 22px; height: 22px; }
+.sheet.sheet-short { height: auto; padding-top: 8px; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); }
+.install-head { display: flex; align-items: center; gap: 14px; margin: 8px 0 14px; }
+.install-head img { width: 64px; height: 64px; border-radius: 15px; flex: none; box-shadow: 0 2px 10px rgba(0,0,0,.35); }
+.install-head h2 { margin: 0; font-size: 19px; font-weight: 600; text-wrap: balance; }
+.install-head p { margin: 4px 0 0; font-size: 14px; color: var(--ink-2); }
+.install-steps { margin: 0; padding: 0; list-style: none; counter-reset: st; display: grid; gap: 10px; }
+.install-steps li { counter-increment: st; display: flex; gap: 12px; align-items: center; font-size: 16px; line-height: 1.4; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.07); }
+.install-steps li::before { content: counter(st); flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 14px; font-weight: 700; background: #2f88ff; color: #fff; }
+.install-steps li.note { background: none; padding: 2px 4px; font-size: 13px; color: var(--ink-3); counter-increment: none; }
+.install-steps li.note::before { display: none; }
+.install-steps li > span { min-width: 0; }
+.ico-share { width: 20px; height: 20px; vertical-align: -4px; fill: none; stroke: #2f88ff; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.install-done { width: 100%; margin-top: 16px; padding: 13px; background: #2f88ff; border: 0; }

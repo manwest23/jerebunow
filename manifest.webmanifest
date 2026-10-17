@@ -1,0 +1,17 @@
+{
+  "name": "JerebuNow",
+  "short_name": "JerebuNow",
+  "description": "Malaysian haze and Air Pollutant Index (API / IPU) near you, with running advice and forecast.",
+  "lang": "en-MY",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1b2433",
+  "theme_color": "#1b2433",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

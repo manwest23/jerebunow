@@ -404,6 +404,8 @@
     $("listSource").textContent = state.data?.sample ? T.srcSample : T.listSource;
     $("listCredit").innerHTML = `${T.developedBy} <b>manwest</b>`;
     $("listLang").innerHTML = langSwitch();
+    $("installBtn").setAttribute("aria-label", T.installBtn);
+    $("installBtn").title = T.installBtn;
   }
 
   function renderList(list = entries()) {
@@ -536,6 +538,34 @@
     window.JerebuMap?.close();
   }
 
+  /* ---------- Add to Home Screen ---------- */
+  let installPrompt = null;
+  const isStandalone = () => window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  function syncInstallBtn() { $("installBtn").hidden = isStandalone(); }
+  async function onInstall() {
+    if (installPrompt) {
+      installPrompt.prompt();
+      const choice = await installPrompt.userChoice.catch(() => null);
+      installPrompt = null;
+      if (choice?.outcome === "accepted") $("installBtn").hidden = true;
+      return;
+    }
+    const ios = isIOS();
+    $("installTitle").textContent = T.installTitle;
+    $("installSub").textContent = T.installSub;
+    $("installSteps").innerHTML = (ios ? T.installIOS : T.installOther).map((s) => `<li><span>${s}</span></li>`).join("")
+      + (ios ? `<li class="note">${T.installIOSNote}</li>` : "");
+    $("installDone").textContent = T.installOk;
+    setView($("installSheet"), true);
+  }
+  const closeInstall = () => setView($("installSheet"), false);
+  window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installPrompt = e; syncInstallBtn(); });
+  window.addEventListener("appinstalled", () => { installPrompt = null; $("installBtn").hidden = true; closeInstall(); });
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  }
+
   /* ---------- flow ---------- */
   async function locate() {
     state.locating = true; render();
@@ -583,11 +613,13 @@
     const act = t.closest("[data-action]");
     if (act?.dataset.action === "locate") return locate();
     if (act?.dataset.action === "reload") return refresh();
+    if (t.closest("[data-close-install]")) return closeInstall();
     if (t.closest("[data-close]")) return closeSheet();
   });
   document.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape") {
-      if (sheet.classList.contains("open")) closeSheet();
+      if ($("installSheet").classList.contains("open")) closeInstall();
+      else if (sheet.classList.contains("open")) closeSheet();
       else if (document.body.classList.contains("map-open")) closeMap();
       else if (document.body.classList.contains("list-open")) showList(false);
     }
@@ -598,6 +630,7 @@
     }
   });
   $("mapBtn").addEventListener("click", openMap);
+  $("installBtn").addEventListener("click", onInstall);
   $("searchOpen").addEventListener("click", openSheet);
   $("listBtn").addEventListener("click", () => showList(true));
   $("editBtn").addEventListener("click", () => { state.editing = !state.editing; renderList(); });
@@ -613,7 +646,8 @@
   const savedLang = store.get(LANG_KEY, null);
   state.lang = I18N[savedLang] ? savedLang : (navigator.language || "").toLowerCase().startsWith("ms") ? "ms" : "en";
   T = I18N[state.lang];
-  [$("listView"), $("mapView"), sheet].forEach((v) => setView(v, false));
+  [$("listView"), $("mapView"), sheet, $("installSheet")].forEach((v) => setView(v, false));
+  syncInstallBtn();
   renderChrome();
 
   refresh().then((ok) => { if (ok) locate(); });

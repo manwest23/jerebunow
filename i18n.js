@@ -116,7 +116,24 @@ window.JEREBU_I18N = {
     open: "Open",
     noHistory: "Hourly history fills in over the day.",
     mapLoading: "Loading map…",
-    mapError: "The map could not load. Check your connection and try again."
+    mapError: "The map could not load. Check your connection and try again.",
+
+    // Add to Home Screen
+    installBtn: "Add to Home Screen",
+    installTitle: "Add JerebuNow to your Home Screen",
+    installSub: "Open it like an app: full screen, with its own icon.",
+    installIOS: [
+      "Tap the Share button <svg class=\"ico-share\" viewBox=\"0 0 20 20\" aria-label=\"Share\"><path d=\"M10 2.5v10M6.5 6 10 2.5 13.5 6\"/><path d=\"M6 9H4.5v8.5h11V9H14\"/></svg> in Safari's toolbar.",
+      "Scroll down and tap <b>Add to Home Screen</b>.",
+      "Tap <b>Add</b> in the top-right corner."
+    ],
+    installIOSNote: "Don't see the option? Open this page in Safari.",
+    installOther: [
+      "Open your browser's menu <b>⋮</b>.",
+      "Tap <b>Install app</b> or <b>Add to Home screen</b>.",
+      "Confirm to add it."
+    ],
+    installOk: "OK"
   },
 
   ms: {
@@ -229,6 +246,22 @@ window.JEREBU_I18N = {
     open: "Buka",
     noHistory: "Sejarah setiap jam bertambah sepanjang hari.",
     mapLoading: "Memuatkan peta…",
-    mapError: "Peta tidak dapat dimuatkan. Semak sambungan anda dan cuba lagi."
+    mapError: "Peta tidak dapat dimuatkan. Semak sambungan anda dan cuba lagi.",
+
+    installBtn: "Tambah ke Skrin Utama",
+    installTitle: "Tambah JerebuNow ke Skrin Utama",
+    installSub: "Buka seperti aplikasi: skrin penuh, dengan ikonnya sendiri.",
+    installIOS: [
+      "Ketik butang Kongsi <svg class=\"ico-share\" viewBox=\"0 0 20 20\" aria-label=\"Share\"><path d=\"M10 2.5v10M6.5 6 10 2.5 13.5 6\"/><path d=\"M6 9H4.5v8.5h11V9H14\"/></svg> pada bar alat Safari.",
+      "Tatal ke bawah dan ketik <b>Tambah ke Skrin Utama</b>.",
+      "Ketik <b>Tambah</b> di penjuru kanan atas."
+    ],
+    installIOSNote: "Tiada pilihan itu? Buka halaman ini dalam Safari.",
+    installOther: [
+      "Buka menu pelayar anda <b>⋮</b>.",
+      "Ketik <b>Pasang aplikasi</b> atau <b>Tambah ke skrin utama</b>.",
+      "Sahkan untuk menambah."
+    ],
+    installOk: "Faham"
   }
 };

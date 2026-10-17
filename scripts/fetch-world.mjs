@@ -46,7 +46,7 @@ async function main() {
       const [clon, clat] = d.location?.coordinates || [lon, lat];
       if (!Number.isFinite(p.aqius)) throw new Error("no AQI");
       places.push({
-        label, source: "iqair", name: d.city || label,
+        label, source: "iqair", name: label,             // familiar name (IQAir may name a district)
         state: [d.state, d.country].filter(Boolean).filter((v, j, a) => a.indexOf(v) === j).join(", "),
         country: d.country || "", lat: clat, lon: clon,
         api: p.aqius, pollutant: POLLUTANT[p.mainus] || null, readingTime: p.ts || null, history: [],

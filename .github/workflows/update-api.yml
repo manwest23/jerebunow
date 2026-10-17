@@ -17,14 +17,7 @@ jobs:
         with:
           node-version: 20
       - name: Fetch APIMS
-        env:
-          APIMS_URL: ${{ secrets.APIMS_URL }}
-        run: |
-          if [ -z "$APIMS_URL" ]; then
-            echo "APIMS_URL secret not set yet, keeping sample data."
-            exit 0
-          fi
-          node scripts/fetch-apims.mjs
+        run: node scripts/fetch-apims.mjs
       - name: Commit data
         run: |
           git config user.name "haze-bot"

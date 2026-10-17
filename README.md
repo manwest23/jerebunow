@@ -36,7 +36,7 @@ Open http://localhost:3000 (or :8080) and allow location access.
    APIMS_URL="https://...copied url..." DEBUG=1 node scripts/fetch-apims.mjs
    ```
    If stations don't parse, compare the printed field names with `FIELD` in the script and adjust.
-4. Deploy on GitHub Pages: push the repo, add the URL as a repository secret named `APIMS_URL`, enable Pages, and run the workflow once from the Actions tab. It then refreshes hourly.
+4. Deploy on GitHub Pages and run the workflow once from the Actions tab. It then refreshes hourly. The script already uses the public `mapcaqm` endpoint; set an `APIMS_URL` env var only if DOE moves it.
 
 ## Running outside
 

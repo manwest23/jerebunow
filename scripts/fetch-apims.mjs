@@ -8,20 +8,23 @@
    calls. Running this hourly (GitHub Actions, cron, or a serverless function)
    keeps a same-origin JSON file fresh.
 
-   SETUP — confirm the endpoint once:
+   The endpoint below was confirmed in October 2026. If DOE changes it,
+   find the new one like this:
    1. Open https://eqms.doe.gov.my/APIMS/main in Chrome.
    2. DevTools → Network → filter "Fetch/XHR", reload.
    3. Find the request that returns station readings as JSON
       (it usually goes through /api3/publicmapproxy/... and returns
       ArcGIS-style { features: [ { attributes, geometry } ] }).
-   4. Copy its full URL into APIMS_URL below, or pass it as an env var:
+   4. Put its URL in APIMS_URL below, or pass it as an env var:
         APIMS_URL="https://..." node scripts/fetch-apims.mjs
    5. Run once with DEBUG=1 to print the raw field names, then adjust FIELD
       if any of them differ.
 */
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 
-const APIMS_URL = process.env.APIMS_URL || "PASTE_THE_APIMS_JSON_URL_HERE";
+// Public APIMS endpoints behind https://eqms.doe.gov.my/APIMS/main
+const APIMS_BASE = "https://eqms.doe.gov.my/api3/publicportalapims";
+const APIMS_URL = process.env.APIMS_URL || `${APIMS_BASE}/mapcaqm`;
 const OUT = new URL("../data/api.json", import.meta.url);
 const HISTORY_HOURS = 24;
 const FORECAST_URL = "https://api.data.gov.my/weather/forecast";
@@ -35,13 +38,14 @@ const FORECAST_OVERRIDES = {
 // Candidate field names, checked in order (case-insensitive).
 const FIELD = {
   id:        ["station_id", "stationid", "id", "objectid"],
-  name:      ["location", "station_location", "station_name", "name", "lokasi"],
+  name:      ["station_location", "location", "station_name", "name", "lokasi"],
   state:     ["state_name", "state", "negeri"],
+  stateId:   ["state_id", "stateid"],
   api:       ["api", "ipu", "api_value", "reading", "value"],
-  pollutant: ["pollutant", "parameter", "dominant", "pencemar"],
+  pollutant: ["param_symbol", "pollutant", "parameter", "dominant", "pencemar"],
   lat:       ["latitude", "lat", "y"],
   lon:       ["longitude", "lon", "long", "lng", "x"],
-  time:      ["datetime", "date_time", "time", "timestamp", "masa"]
+  time:      ["record_dt", "datetime", "date_time", "time", "timestamp", "masa"]
 };
 
 function pick(obj, keys) {
@@ -56,21 +60,61 @@ const toNum = (v) => {
   return Number.isFinite(n) ? n : null;
 };
 
+// APIMS marks the dominant pollutant with a symbol.
+const POLLUTANT_SYMBOLS = { "*": "PM10", "**": "PM2.5", "a": "SO2", "b": "NO2", "c": "O3", "d": "CO", "&": "Multiple" };
+function pollutantName(v) {
+  if (v == null || v === "") return null;
+  const s = String(v).trim();
+  if (POLLUTANT_SYMBOLS[s]) return POLLUTANT_SYMBOLS[s];
+  return s.toUpperCase().replace("PM25", "PM2.5");
+}
+
+const titleCase = (s) => s.toLowerCase().replace(/\b([a-z])/g, (c) => c.toUpperCase())
+  .replace(/\bIpd\b/, "IPD").replace(/\bIlp\b/, "ILP");
+
+// "Cheras, W.P. KUALA LUMPUR" -> "Cheras"; "JOHAN SETIA" -> "Johan Setia"
+function stationName(raw) {
+  const s = String(raw || "").split(",")[0].trim();
+  return s === s.toUpperCase() ? titleCase(s) : s;
+}
+// "WP Kuala Lumpur" -> "Kuala Lumpur"
+const stateName = (raw) => String(raw || "").replace(/^W\.?\s*P\.?\s+/i, "").trim();
+
 function normalise(raw) {
   const rows = Array.isArray(raw) ? raw
     : raw.features ? raw.features.map((f) => ({ ...f.attributes, ...(f.geometry ? { x: f.geometry.x, y: f.geometry.y } : {}) }))
     : raw.data || raw.stations || [];
 
-  return rows.map((r) => ({
-    id: String(pick(r, FIELD.id) ?? pick(r, FIELD.name)),
-    name: String(pick(r, FIELD.name) ?? "").trim(),
-    state: String(pick(r, FIELD.state) ?? "").trim(),
-    lat: toNum(pick(r, FIELD.lat)),
-    lon: toNum(pick(r, FIELD.lon)),
-    api: toNum(pick(r, FIELD.api)),
-    pollutant: pick(r, FIELD.pollutant) ? String(pick(r, FIELD.pollutant)).toUpperCase().replace("PM25", "PM2.5") : null,
-    time: pick(r, FIELD.time) ?? null
-  })).filter((s) => s.name && s.lat != null && s.lon != null);
+  return rows.filter((r) => String(pick(r, ["station_status"]) ?? "1") === "1").map((r) => {
+    const api = toNum(pick(r, FIELD.api));
+    return {
+      id: String(pick(r, FIELD.id) ?? pick(r, FIELD.name)),
+      name: stationName(pick(r, FIELD.name)),
+      state: stateName(pick(r, FIELD.state)),
+      stateId: pick(r, FIELD.stateId) ?? null,
+      lat: toNum(pick(r, FIELD.lat)),
+      lon: toNum(pick(r, FIELD.lon)),
+      api: api != null && api >= 0 ? api : null,   // negative = station offline
+      pollutant: pollutantName(pick(r, FIELD.pollutant)),
+      time: pick(r, FIELD.time) ?? null
+    };
+  }).filter((s) => s.name && s.lat != null && s.lon != null);
+}
+
+// Best effort: fill a station's last 24 hours on its first run.
+// Keeps only rows for the requested station, so a wrong response is ignored.
+async function backfillHistory(s) {
+  if (!s.stateId || !s.time) return null;
+  const url = `${APIMS_BASE}/datatrendchart?stateid=${s.stateId}&stationid=${encodeURIComponent(s.id)}&datetime=${encodeURIComponent(s.time)}`;
+  try {
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const rows = (json.highcharts_bar || json.data || []).filter((r) => r.STATION_ID === s.id);
+    if (rows.length < 2) return null;
+    return rows.sort((a, b) => String(a.DATETIME).localeCompare(String(b.DATETIME)))
+      .map((r) => toNum(r.API)).filter((v) => v != null && v >= 0);
+  } catch { return null; }
 }
 
 
@@ -112,11 +156,6 @@ function forecastKeyFor(station, groups) {
 }
 
 async function main() {
-  if (APIMS_URL.startsWith("PASTE_")) {
-    console.error("Set APIMS_URL first. See the setup notes at the top of this file.");
-    process.exit(1);
-  }
-
   const res = await fetch(APIMS_URL, {
     headers: { "Accept": "application/json", "User-Agent": "JerebuNow/1.0 (+personal project)" }
   });
@@ -124,7 +163,7 @@ async function main() {
   const raw = await res.json();
 
   if (process.env.DEBUG) {
-    const sample = raw.features?.[0]?.attributes ?? (Array.isArray(raw) ? raw[0] : raw);
+    const sample = raw.features?.[0]?.attributes ?? raw.data?.[0] ?? (Array.isArray(raw) ? raw[0] : raw);
     console.log("Raw fields:", Object.keys(sample || {}));
   }
 
@@ -138,17 +177,24 @@ async function main() {
   const sameHour = prev.updated && new Date(prev.updated).getHours() === new Date().getHours()
     && Date.now() - new Date(prev.updated) < 3600_000;
 
-  const stations = fresh.map((s) => {
+  const stations = [];
+  let backfilled = 0;
+  for (const s of fresh) {
     const old = prevById.get(s.id);
     let history = old?.history ? [...old.history] : [];
-    if (s.api != null) {
-      if (sameHour && history.length) history[history.length - 1] = s.api;
+    if (history.length < 6) {
+      const filled = await backfillHistory(s);
+      if (filled && filled.length) { history = filled; backfilled++; }
+      else if (s.api != null) history.push(s.api);
+    } else if (s.api != null) {
+      if (sameHour) history[history.length - 1] = s.api;
       else history.push(s.api);
     }
     history = history.slice(-HISTORY_HOURS);
-    const { time, ...rest } = s;
-    return { ...rest, history };
-  });
+    const { time, stateId, ...rest } = s;
+    stations.push({ ...rest, readingTime: time, history });
+  }
+  if (backfilled) console.log(`Backfilled 24h history for ${backfilled} stations`);
 
   // Forecast is optional: if MET is down, keep the previous one.
   let groups = await fetchForecasts();

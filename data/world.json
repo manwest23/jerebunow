@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-17T22:01:36.697Z",
+ "updated": "2026-10-17T22:05:37.268Z",
  "source": "IQAir (US AQI)",
  "places": [
   {
@@ -83,6 +83,26 @@
    }
   },
   {
+   "label": "Kota Kinabalu",
+   "source": "iqair",
+   "name": "Kota Kinabalu",
+   "state": "Sabah, Malaysia",
+   "country": "Malaysia",
+   "lat": 5.980408,
+   "lon": 116.073457,
+   "api": 67,
+   "pollutant": "PM2.5",
+   "readingTime": "2026-10-17T21:00:00.000Z",
+   "history": [],
+   "weather": {
+    "tp": 26,
+    "hu": 78,
+    "ws": 2.5,
+    "ic": "03n",
+    "ts": "2026-10-17T21:00:00.000Z"
+   }
+  },
+  {
    "label": "Kuching",
    "source": "iqair",
    "name": "Kuching",
@@ -105,7 +125,7 @@
   {
    "label": "Melaka",
    "source": "iqair",
-   "name": "Malacca",
+   "name": "Melaka",
    "state": "Melaka, Malaysia",
    "country": "Malaysia",
    "lat": 2.196,
@@ -185,7 +205,7 @@
   {
    "label": "Bangkok",
    "source": "iqair",
-   "name": "Phra Nakhon",
+   "name": "Bangkok",
    "state": "Bangkok, Thailand",
    "country": "Thailand",
    "lat": 13.76512,

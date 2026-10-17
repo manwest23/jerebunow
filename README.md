@@ -11,6 +11,8 @@ A small web app that shows the Malaysian Air Pollutant Index (API / IPU) for the
 | `app.js` | Loads `data/api.json`, finds your nearest station, renders the swipeable pages and locations list |
 | `i18n.js` | All text in English and Bahasa Melayu |
 | `map.js` | Air quality map, loaded on first open |
+| `iqair.js` | IQAir client for places outside DOE's network (official API, cached, rate-limited) |
+| `config.js` | Settings: your IQAir API key |
 | `fx.js` | Weather effects over the haze sky: rain, thunderstorms, sun, moon and stars, clouds, haze |
 | `data/api.json` | Station readings. Ships with **sample data**; replaced by the fetch script |
 | `scripts/fetch-apims.mjs` | Pulls live readings from DOE APIMS plus the MET Malaysia forecast, and writes `data/api.json` with a rolling 24 h history |
@@ -54,6 +56,15 @@ When conditions aren't good, it suggests the next dry window from the forecast.
 ## Forecast
 
 The 7-day forecast comes from MET Malaysia through the government open data API (`https://api.data.gov.my/weather/forecast`, no key needed). Each station uses a forecast location with the same name, otherwise its state. To pin a station to a specific district or town, add it to `FORECAST_OVERRIDES` in the script. DOE does not publish an API (haze) forecast, so the forecast covers weather only.
+
+## Worldwide air quality (IQAir)
+
+DOE stations stay the source for Malaysia. For places DOE doesn't cover (searching any city in the world, or **My Location** when you're abroad or more than 50 km from a DOE station), JerebuNow uses IQAir's official API.
+
+1. Create a free account at https://dashboard.iqair.com and create a **Community** API key.
+2. Put it in `config.js` as `iqairKey`.
+
+The free plan allows 5 calls per minute and 10,000 per month, shared by everyone using the site. Readings are cached for 30 minutes per place and calls are spaced automatically. IQAir reports the **US AQI**, which differs from Malaysia's API, so IQAir pages use the US categories and are labelled "US AQI · IQAir". City search uses Open-Meteo's free geocoding API. Scraping iqair.com is not allowed by its terms, so the app only uses the API.
 
 ## Map
 

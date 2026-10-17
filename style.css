@@ -57,6 +57,8 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .sky-very      { --sky-a: #9a6a44; --sky-b: #4a2f22; }
 .sky-hazard    { --sky-a: #8c4640; --sky-b: #3a1b1a; }
 .sky-none      { --sky-a: #4f5c6e; --sky-b: #222a36; }
+.sky-purple    { --sky-a: #74508a; --sky-b: #331f3f; }
+.sky-maroon    { --sky-a: #7a3a46; --sky-b: #2e141a; }
 .sky {
   background:
     radial-gradient(120% 60% at 50% 0%, rgba(255,255,255,.16), transparent 62%),
@@ -144,7 +146,8 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .advice-sign { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: #10131a; font-weight: 800; font-size: 18px; }
 .advice-text { margin: 0; font-size: 16px; line-height: 1.45; min-width: 0; }
 .advice-text b { display: block; font-size: 17px; margin-bottom: 2px; }
-.scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 14px; }
+.scale { display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); gap: 4px; margin-top: 14px; }
+.scale-note { margin-top: 10px; }
 .scale div { font-size: 10px; line-height: 1.3; color: var(--ink-3); text-align: center; }
 .scale i { display: block; height: 5px; border-radius: 3px; margin-bottom: 5px; opacity: 0.4; }
 .scale div.on { color: var(--ink); font-weight: 600; }
@@ -582,3 +585,13 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
 @keyframes drift { from { translate: -18vw 0; } to { translate: 18vw 0; } }
 @keyframes fog { from { transform: translateX(-12%); } to { transform: translateX(12%); } }
 @keyframes flash { 0%, 88% { opacity: 0; } 89% { opacity: .85; } 90% { opacity: .1; } 91.5% { opacity: .6; } 94%, 100% { opacity: 0; } }
+
+/* ---------- Search sections (DOE + IQAir) ---------- */
+.list-sheet .list li.sec {
+  border: 0; padding: 16px 0 6px; font-size: 12px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3);
+}
+.list-sheet .list li.sec + li { border-top: 0; }
+.small.pad { padding: 12px 0; margin: 0; }
+.row .dot.globe { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink-3); }
+.row .val.src { font-size: 12px; font-weight: 600; color: var(--ink-3); letter-spacing: .04em; }

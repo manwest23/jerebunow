@@ -38,7 +38,7 @@ window.JerebuFX = (() => {
     `<span class="fx-fog" style="top:${18 + i * 22}%;animation-duration:${38 + i * 14}s;animation-delay:-${i * 9}s"></span>`).join("");
 
   /**
-   * kind: storm | rain | clear | cloud | haze | none
+   * kind: storm | rain | snow | clear | cloud | haze | none
    * night: boolean; hazy: 0 (clean), 1 (moderate), 2 (unhealthy or worse)
    */
   function markup(kind, night, hazy, seed) {
@@ -53,6 +53,8 @@ window.JerebuFX = (() => {
       parts = (night ? "" : `<div class="fx-sun dim"><i class="glow"></i><i class="disc"></i></div>`) + fog(4);
     } else if (kind === "rain") {
       parts = clouds(r, 4, "dark") + `<canvas class="fx-drops" data-intensity="1"></canvas>`;
+    } else if (kind === "snow") {
+      parts = clouds(r, 3, night ? "night" : "") + `<canvas class="fx-drops" data-intensity="0.9" data-mode="snow"></canvas>`;
     } else if (kind === "storm") {
       parts = clouds(r, 5, "dark") + `<canvas class="fx-drops" data-intensity="1.7"></canvas>`
         + `<div class="fx-flash" style="animation-delay:-${(r() * 9).toFixed(1)}s"></div>`;
@@ -62,7 +64,7 @@ window.JerebuFX = (() => {
   }
 
   /* ---------- rain canvas ---------- */
-  let canvas = null, ctx = null, drops = [], raf = 0, last = 0, running = false, W = 0, H = 0, dpr = 1, intensity = 1;
+  let canvas = null, ctx = null, drops = [], raf = 0, last = 0, running = false, W = 0, H = 0, dpr = 1, intensity = 1, mode = "rain";
 
   function size() {
     if (!canvas) return;
@@ -70,11 +72,15 @@ window.JerebuFX = (() => {
     W = canvas.clientWidth; H = canvas.clientHeight;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const n = Math.round((W * H) / 5200 * intensity);
+    const n = Math.round((W * H) / (mode === "snow" ? 7000 : 5200) * intensity);
     drops = Array.from({ length: n }, () => newDrop(true));
   }
   function newDrop(anywhere) {
     const z = Math.random();                         // depth: 0 far .. 1 near
+    if (mode === "snow") return {
+      x: Math.random() * W, y: anywhere ? Math.random() * H : -10 - Math.random() * 40,
+      r: 1 + z * 2.6, v: 30 + z * 70, a: 0.35 + z * 0.5, ph: Math.random() * 6.28, sw: 10 + z * 22
+    };
     return {
       x: Math.random() * (W + 80) - 40,
       y: anywhere ? Math.random() * H : -20 - Math.random() * 80,
@@ -89,6 +95,7 @@ window.JerebuFX = (() => {
     const dt = Math.min(0.05, (t - (last || t)) / 1000);
     last = t;
     ctx.clearRect(0, 0, W, H);
+    if (mode === "snow") { drawSnow(dt, t); raf = requestAnimationFrame(frame); return; }
     const slant = 0.18;
     for (const d of drops) {
       d.y += d.v * dt; d.x += d.v * dt * slant;
@@ -102,6 +109,15 @@ window.JerebuFX = (() => {
     }
     raf = requestAnimationFrame(frame);
   }
+  function drawSnow(dt, t) {
+    for (const d of drops) {
+      d.y += d.v * dt;
+      const x = d.x + Math.sin(t / 1400 + d.ph) * d.sw;
+      if (d.y - d.r > H) Object.assign(d, newDrop(false));
+      ctx.fillStyle = `rgba(255,255,255,${d.a})`;
+      ctx.beginPath(); ctx.arc(x, d.y, d.r, 0, 6.2832); ctx.fill();
+    }
+  }
   function start() {
     if (!canvas || running) return;
     if (reduce.matches) { drawStill(); return; }
@@ -112,6 +128,7 @@ window.JerebuFX = (() => {
   function drawStill() {
     if (!ctx) return;
     ctx.clearRect(0, 0, W, H);
+    if (mode === "snow") { drawSnow(0, 0); return; }
     for (const d of drops) {
       ctx.strokeStyle = `rgba(200,220,255,${d.a})`; ctx.lineWidth = d.w;
       ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - d.len * 0.18, d.y - d.len); ctx.stroke();
@@ -126,6 +143,7 @@ window.JerebuFX = (() => {
     canvas = c; ctx = c ? c.getContext("2d") : null;
     if (!c) return;
     intensity = parseFloat(c.dataset.intensity) || 1;
+    mode = c.dataset.mode === "snow" ? "snow" : "rain";
     size();
     if (!document.hidden && !paused) start();
   }

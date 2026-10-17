@@ -12,6 +12,9 @@
   const SAVED_KEY = "jerebunow.saved";
   const PAGE_KEY = "jerebunow.page";
   const LANG_KEY = "jerebunow.lang";
+  const PLACES_KEY = "jerebunow.places";
+  const IQ = window.JerebuIQ || { enabled: false };
+  const DOE_FAR_KM = 50;          // beyond this, try IQAir for "My Location"
   const I18N = window.JEREBU_I18N;
 
   /* ---------- API bands (DOE) ---------- */
@@ -25,14 +28,32 @@
   const bandFor = (v) => BANDS.find((b) => v <= b.max) || BANDS[BANDS.length - 1];
   const RANGES = ["0–50", "51–100", "101–200", "201–300", "300+"];
 
+  /* ---------- US AQI bands (IQAir places) ---------- */
+  const US_BANDS = [
+    { key: "good", us: true, max: 50, hex: "#3fb560", sky: "moderate", sign: "✓" },
+    { key: "moderate", us: true, max: 100, hex: "#f2c230", sky: "unhealthy", sign: "✓" },
+    { key: "usg", us: true, max: 150, hex: "#f08a24", sky: "very", sign: "!" },
+    { key: "unhealthy", us: true, max: 200, hex: "#e5443a", sky: "hazard", sign: "!" },
+    { key: "very", us: true, max: 300, hex: "#8f3f97", sky: "purple", sign: "!" },
+    { key: "hazardous", us: true, max: Infinity, hex: "#7e0023", sky: "maroon", sign: "!" }
+  ].map((b) => ({ ...b, color: b.hex }));
+  const US_RANGES = ["0–50", "51–100", "101–150", "151–200", "201–300", "301+"];
+  const usBandFor = (v) => US_BANDS.find((b) => v <= b.max) || US_BANDS[US_BANDS.length - 1];
+  const isIQ = (s) => s && s.source === "iqair";
+  const bandOf = (s) => (isIQ(s) ? usBandFor(s.api) : bandFor(s.api));
+  const skyOf = (b) => b.sky || b.key;
+  const unitOf = (s) => (isIQ(s) ? T.usAqi : T.api);
+
   const $ = (id) => document.getElementById(id);
   const state = {
     data: null, dataStamp: null, coords: null, locating: true,
-    saved: [], page: 0, editing: false, lang: "en"
+    saved: [], page: 0, editing: false, lang: "en",
+    places: {}, iq: {}, iqMe: null, iqStamp: 0
   };
   let T = I18N.en;
   const otherLang = () => (state.lang === "en" ? "ms" : "en");
-  const bandText = (b) => T.bands[b.key];
+  const bandText = (b) => (b.us ? T.usBands[b.key] : T.bands[b.key]);
+  const otherBandLabel = (b) => (b.us ? I18N[otherLang()].usBands : I18N[otherLang()].bands)[b.key].label;
 
   /* ---------- helpers ---------- */
   function km(a, b) {
@@ -151,13 +172,27 @@
     const i = days.findIndex((d) => d.date >= localISO(new Date()));
     return i >= 0 ? i : 0;
   }
+  const isWorldId = (id) => typeof id === "string" && id.startsWith("w:");
   function entries() {
     const list = [{ kind: "me" }];
-    for (const id of state.saved) if (stationById(id)) list.push({ kind: "saved", id });
+    for (const id of state.saved) {
+      if (isWorldId(id) ? state.places[id] : stationById(id)) list.push({ kind: "saved", id });
+    }
     return list.map((e) => {
       if (e.kind === "me") {
         const n = state.coords ? nearest(state.coords) : null;
+        // Outside DOE coverage (abroad, or far from any station): use IQAir when it is closer
+        const iq = state.iqMe && state.iqMe.station;
+        if (state.coords && iq && (!n || n.d > DOE_FAR_KM)) {
+          const d = km(state.coords, iq);
+          if (!n || d < n.d) return { ...e, s: iq, d, iqRes: state.iqMe };
+        }
         return { ...e, s: n?.s || null, d: n?.d ?? null };
+      }
+      if (isWorldId(e.id)) {
+        const res = state.iq[e.id];
+        const s = res && res.station ? res.station : null;
+        return { ...e, world: true, place: state.places[e.id], iqRes: res, s, d: s && state.coords ? km(state.coords, s) : null };
       }
       const s = stationById(e.id);
       return { ...e, s, d: state.coords ? km(state.coords, s) : null };
@@ -169,6 +204,14 @@
   const DOT = { go: "var(--run-go)", care: "var(--run-care)", stop: "var(--run-stop)" };
 
   function airFactor(s) {
+    const u = unitOf(s);
+    if (isIQ(s)) {                                          // US AQI thresholds
+      if (s.api <= 50) return { level: "go", text: T.airGood(s.api, u) };
+      if (s.api <= 100) return { level: "go", text: T.airMod(s.api, u) };
+      if (s.api <= 150) return { level: "care", text: T.usSensitive(s.api, u) };
+      if (s.api <= 200) return { level: "stop", text: T.airUnhealthy(s.api, u) };
+      return { level: "stop", text: T.airVery(s.api, s.api > 300, u) };
+    }
     const h = s.history || [];
     const rising = h.length >= 4 && h[h.length - 1] - h[h.length - 4] > 3;
     if (s.api <= 50) return { level: "go", text: T.airGood(s.api) };
@@ -205,7 +248,38 @@
     }
     return null;
   }
+  function runCardIQ(s) {
+    const w = currentWeather(s);
+    const factors = [{ k: T.kAir, ...airFactor(s) }];
+    if (w) {
+      if (w.kind === "storm") factors.push({ k: T.kWeather, level: "stop", text: T.wxNowStorm });
+      else if (w.kind === "rain") factors.push({ k: T.kWeather, level: "care", text: T.wxNowRain(w.label) });
+      else if (w.kind === "snow") factors.push({ k: T.kWeather, level: "care", text: T.wxNowSnow });
+      else factors.push({ k: T.kWeather, level: "go", text: T.wxNowOk(w.label) });
+      if (Number.isFinite(w.tp)) {
+        if (w.tp >= 32) factors.push({ k: T.kHeat, level: "care", text: T.heatNow(w.tp) });
+        else if (w.tp <= 5) factors.push({ k: T.kHeat, level: "care", text: T.heatNowCold(w.tp) });
+        else factors.push({ k: T.kHeat, level: "go", text: T.heatNowOk(w.tp) });
+      }
+    }
+    return runCardHTML(factors, (airBad, level) => (airBad ? T.bestIndoorUS : level !== "go" ? T.bestLater : ""));
+  }
+  function runCardHTML(factors, bestFn) {
+    const level = factors.reduce((m, f) => (LEVELS[f.level] > LEVELS[m] ? f.level : m), "go");
+    const airBad = factors[0].level === "stop";
+    const badge = level === "go" ? T.runGo : level === "care" ? T.runCare : T.runStop;
+    const verdict = level === "go" ? T.verdictGo : level === "care" ? T.verdictCare : airBad ? T.verdictStopAir : T.verdictStop;
+    const best = bestFn(airBad, level);
+    return `<section class="card run" data-level="${level}">
+      <h2 class="card-head">${ICON.run}${T.runningOutside}</h2>
+      <div class="run-top"><span class="run-badge">${badge}</span><p class="run-verdict">${verdict}</p></div>
+      <ul class="run-factors">${factors.map((f) =>
+        `<li><span class="k">${f.k}</span><span class="v"><i style="background:${DOT[f.level]}"></i>${esc(f.text)}</span></li>`).join("")}</ul>
+      <p class="run-best">${esc(best)}</p>
+    </section>`;
+  }
   function runCard(s) {
+    if (isIQ(s)) return runCardIQ(s);
     const fc = forecastFor(s);
     const ti = fc ? todayIndex(fc.days) : -1;
     const day = fc ? fc.days[ti] : null;
@@ -238,9 +312,15 @@
         <span class="advice-sign" style="background:${band.color}" aria-hidden="true">${band.sign}</span>
         <p class="advice-text"><b>${bt.title}</b>${bt.advice}</p>
       </div>
-      <div class="scale" role="img" aria-label="${esc(T.mapLegend)}">${BANDS.map((b, i) =>
-        `<div class="${b === band ? "on" : ""}"><i style="background:${b.color}"></i>${T.bands[b.key].label}<br>${RANGES[i]}</div>`).join("")}</div>
+      ${scaleHTML(band)}
     </section>`;
+  }
+  function scaleHTML(band) {
+    const set = band.us ? US_BANDS : BANDS, ranges = band.us ? US_RANGES : RANGES;
+    const labels = band.us ? T.usBands : T.bands;
+    return `<div class="scale" style="--n:${set.length}" role="img" aria-label="${esc(band.us ? T.usAqi : T.mapLegend)}">${set.map((b, i) =>
+      `<div class="${b === band ? "on" : ""}"><i style="background:${b.color}"></i>${(band.us && T.usShort[b.key]) || labels[b.key].label}<br>${ranges[i]}</div>`).join("")}</div>
+      ${band.us ? `<p class="small scale-note">${T.scaleNote}</p>` : ""}`;
   }
 
   function hoursCard(s) {
@@ -293,7 +373,19 @@
       <ul class="fc">${rows}</ul><p class="small fc-src">${esc(T.forecastSource(fc.location))}</p></section>`;
   }
 
+  function tilesIQ(s) {
+    const w = s.weather || {}, pn = T.pollutantNotes;
+    const wind = Number.isFinite(w.ws) ? `${Math.round(w.ws * 3.6)} km/h` : "--";
+    return `<div class="grid2">
+      <section class="card"><h2 class="card-head">${ICON.pol}${T.mainPollutant}</h2>
+        <p class="big">${esc(s.pollutant || "--")}</p><p class="small">${esc(pn[s.pollutant] || pn.fallback)}</p></section>
+      <section class="card"><h2 class="card-head">${ICON.clock}${T.weatherNow}</h2>
+        <p class="big">${Number.isFinite(w.tp) ? `${w.tp}°` : "--"}</p>
+        <p class="small">${T.humidity} ${Number.isFinite(w.hu) ? `${w.hu}%` : "--"} · ${T.wind} ${wind}</p></section>
+    </div>`;
+  }
   function tiles(s) {
+    if (isIQ(s)) return tilesIQ(s);
     const h = s.history || [];
     let trend = "--", tnote = T.notEnough;
     if (h.length >= 4) {
@@ -317,12 +409,16 @@
     </div>`;
   }
 
-  function footer() {
+  function footer(s) {
+    const src = isIQ(s)
+      ? `<p>${T.srcIQ}</p>
+      <p>${T.poweredBy} <a href="https://www.iqair.com/" target="_blank" rel="noopener">IQAir</a></p>`
+      : `<p>${state.data?.sample ? T.srcSample : T.srcLive}</p>
+      <p>${T.srcForecast}</p>
+      <p>${T.srcOfficial} <a href="https://eqms.doe.gov.my/APIMS/main" target="_blank" rel="noopener">eqms.doe.gov.my</a></p>`;
     return `<footer class="foot">
       ${langSwitch()}
-      <p>${state.data?.sample ? T.srcSample : T.srcLive}</p>
-      <p>${T.srcForecast}</p>
-      <p>${T.srcOfficial} <a href="https://eqms.doe.gov.my/APIMS/main" target="_blank" rel="noopener">eqms.doe.gov.my</a></p>
+      ${src}
       <p class="credit">${T.developedBy} <b>manwest</b></p>
     </footer>`;
   }
@@ -333,7 +429,16 @@
   }
 
   // Weather right now at a station, from MET's forecast for this part of the day
+  // IQAir icon codes (OpenWeather style): 01 clear, 02 few clouds, 03/04 clouds,
+  // 09 showers, 10 rain, 11 thunderstorm, 13 snow, 50 mist; "n" = night there
+  const IC_KIND = { "01": "clear", "02": "cloud", "03": "cloud", "04": "cloud", "09": "rain", "10": "rain", "11": "storm", "13": "snow", "50": "haze" };
+  const nightAt = (s) => (isIQ(s) && s.weather && s.weather.ic ? /n$/.test(s.weather.ic) : isNight());
   function currentWeather(s) {
+    if (isIQ(s)) {
+      const w = s.weather || {}, code = String(w.ic || "").slice(0, 2);
+      const kind = IC_KIND[code];
+      return kind ? { kind, label: T.icLabels[code] || "", tp: w.tp } : null;
+    }
     const fc = forecastFor(s);
     if (!fc) return null;
     const day = fc.days[todayIndex(fc.days)];
@@ -344,18 +449,36 @@
   const hazeLevel = (api) => (api > 100 ? 2 : api > 50 ? 1 : 0);
   function fxFor(s, seed) {
     const w = s ? currentWeather(s) : null;
-    return window.JerebuFX ? JerebuFX.markup(w ? w.kind : "none", isNight(), s ? hazeLevel(s.api) : 0, seed) : "";
+    return window.JerebuFX ? JerebuFX.markup(w ? w.kind : "none", s ? nightAt(s) : isNight(), s ? hazeLevel(s.api) : 0, seed) : "";
   }
   function heroWeather(s) {
     const w = currentWeather(s);
     if (!w) return "";
-    const temp = Number.isFinite(w.min) && Number.isFinite(w.max) ? ` · ${w.min}°–${w.max}°` : "";
-    return `<p class="hero-wx"><span class="wx-ic" aria-hidden="true">${w.kind === "clear" && isNight() ? WX.moon : WX[w.kind]}</span>${esc(w.label)}${temp}</p>`;
+    const temp = Number.isFinite(w.tp) ? ` · ${w.tp}°` : Number.isFinite(w.min) && Number.isFinite(w.max) ? ` · ${w.min}°–${w.max}°` : "";
+    const icon = w.kind === "clear" && nightAt(s) ? WX.moon : (WX[w.kind] || WX.cloud);
+    return `<p class="hero-wx"><span class="wx-ic" aria-hidden="true">${icon}</span>${esc(w.label)}${temp}</p>`;
+  }
+  function iqErrorText(code) {
+    if (/limit|too_many/.test(code)) return T.iqErr.limit;
+    if (/no_nearest|not_found|no_data/.test(code)) return T.iqErr.none;
+    if (/network|http_5/.test(code)) return T.iqErr.network;
+    return T.iqErr.off;
   }
 
   function pageHTML(e, i) {
-    const night = isNight() ? " night" : "";
+    const night = (e.s ? nightAt(e.s) : isNight()) ? " night" : "";
     const tag = e.kind === "me" ? `<p class="hero-tag">${ARROW}${T.myLocation}</p>` : `<p class="hero-tag">&nbsp;</p>`;
+    if (e.world && !e.s) {
+      const msg = e.iqRes && e.iqRes.error ? iqErrorText(e.iqRes.error) : T.iqLoading;
+      const retry = e.iqRes && e.iqRes.error ? `<button class="pill" type="button" data-retry="${esc(e.id)}">${T.tryAgain}</button>` : "";
+      return `<section class="slide sky sky-none${night}" data-index="${i}" data-band="none" aria-label="${esc(e.place.name)}">
+        ${fxFor(null, e.id)}<div class="page"><div class="page-inner">
+          <header class="hero">${tag}<p class="hero-name">${esc(e.place.name)}</p><p class="hero-api">--</p>
+            <p class="hero-meta">${esc([e.place.admin, e.place.country].filter(Boolean).join(", "))}</p></header>
+          <section class="card empty"><p>${msg}</p>${retry}</section>
+          ${footer({ source: "iqair" })}
+        </div></div></section>`;
+    }
     if (!e.s) {
       return `<section class="slide sky sky-none${night}" data-index="${i}" data-band="none" aria-label="${T.myLocation}">
         ${fxFor(null, "me")}<div class="page"><div class="page-inner">
@@ -365,16 +488,17 @@
           ${footer()}
         </div></div></section>`;
     }
-    const s = e.s, band = bandFor(s.api);
-    const other = I18N[otherLang()].bands[band.key].label;
-    const meta = [e.kind === "me" ? (e.d != null ? T.nearestStation(fmtKm(e.d)) : "") : s.state,
-      timeAgo(s.readingTime || state.data.updated)].filter(Boolean).join(" · ");
-    return `<section class="slide sky sky-${band.key}${night}" data-index="${i}" data-band="${band.key}" aria-label="${esc(s.name)}">
-      ${fxFor(s, s.id)}<div class="page"><div class="page-inner">
+    const s = e.s, band = bandOf(s), sky = skyOf(band);
+    const other = otherBandLabel(band);
+    const near = e.kind === "me" && e.d != null ? (isIQ(s) ? T.nearestCity(fmtKm(e.d)) : T.nearestStation(fmtKm(e.d))) : "";
+    const meta = [e.kind === "me" ? near : s.state, timeAgo(s.readingTime || state.data.updated),
+      e.iqRes && e.iqRes.stale ? T.iqStale : ""].filter(Boolean).join(" · ");
+    return `<section class="slide sky sky-${sky}${night}" data-index="${i}" data-band="${sky}" aria-label="${esc(s.name)}">
+      ${fxFor(s, s.id || e.id || s.name)}<div class="page"><div class="page-inner">
         <header class="hero">
           ${tag}
           <p class="hero-name">${esc(s.name)}</p>
-          <p class="hero-api">${s.api}<small>${T.api}</small></p>
+          <p class="hero-api">${s.api}<small>${unitOf(s)}</small></p>
           <p class="hero-cat">${bandText(band).label} · <span class="alt">${other}</span></p>
           ${heroWeather(s)}
           <p class="hero-hl">${hiLo(s)}</p>
@@ -385,7 +509,7 @@
         ${hoursCard(s)}
         ${forecastCard(s)}
         ${tiles(s)}
-        ${footer()}
+        ${footer(s)}
       </div></div>
     </section>`;
   }
@@ -396,7 +520,7 @@
     const list = entries();
     state.page = Math.max(0, Math.min(state.page, list.length - 1));
     // Skip rebuilding pages when nothing visible changed (keeps scroll smooth).
-    const key = JSON.stringify([state.dataStamp, state.lang, state.locating, list.map((e) => [e.kind, e.s?.id, e.d && Math.round(e.d * 10)]), isNight()]);
+    const key = JSON.stringify([state.dataStamp, state.iqStamp, state.lang, state.locating, list.map((e) => [e.kind, e.s?.id, e.d && Math.round(e.d * 10)]), isNight()]);
     const pager = $("pager");
     if (force || key !== lastPagesKey) {
       lastPagesKey = key;
@@ -410,7 +534,7 @@
     requestAnimationFrame(markDot);
     $("dots").innerHTML = list.map((e, i) =>
       `<button class="dot-btn" type="button" role="tab" data-goto="${i}" aria-selected="${i === state.page}"
-        aria-label="${esc(e.kind === "me" ? T.myLocation : e.s?.name || "")}">${e.kind === "me" ? ARROW : "<i></i>"}</button>`).join("");
+        aria-label="${esc(e.kind === "me" ? T.myLocation : e.s?.name || e.place?.name || "")}">${e.kind === "me" ? ARROW : "<i></i>"}</button>`).join("");
     renderList(list);
     renderChrome();
   }
@@ -435,39 +559,70 @@
   function renderList(list = entries()) {
     $("editBtn").textContent = state.editing ? T.done : T.edit;
     $("locCards").innerHTML = list.map((e, i) => {
-      const s = e.s, night = isNight() ? " night" : "";
-      const sky = s ? `sky-${bandFor(s.api).key}` : "sky-none";
-      const sub = e.kind === "me" ? `${ARROW}${T.myLocation}${s ? ` · ${esc(s.state)}` : ""}` : esc(s.state);
-      const name = e.kind === "me" ? (s ? s.name : state.locating ? T.locating : T.locationOff) : s.name;
+      const s = e.s, night = (s ? nightAt(s) : isNight()) ? " night" : "";
+      const band = s ? bandOf(s) : null;
+      const sky = band ? `sky-${skyOf(band)}` : "sky-none";
+      const where = s ? s.state : e.place ? [e.place.admin, e.place.country].filter(Boolean).join(", ") : "";
+      const tagIQ = s && isIQ(s) ? ` · ${T.usAqi}` : "";
+      const sub = e.kind === "me" ? `${ARROW}${T.myLocation}${where ? ` · ${esc(where)}` : ""}` : esc(where) + tagIQ;
+      const name = e.kind === "me" ? (s ? s.name : state.locating ? T.locating : T.locationOff) : (s ? s.name : e.place.name);
       const remove = state.editing && e.kind === "saved"
-        ? `<button class="remove-btn" type="button" data-remove="${esc(e.id)}" aria-label="${esc(T.remove(s.name))}"><svg viewBox="0 0 14 14"><path d="M3 7h8"/></svg></button>` : "";
+        ? `<button class="remove-btn" type="button" data-remove="${esc(e.id)}" aria-label="${esc(T.remove(name))}"><svg viewBox="0 0 14 14"><path d="M3 7h8"/></svg></button>` : "";
       const swipe = e.kind === "saved" && !state.editing;
-      const del = swipe ? `<button class="swipe-del" type="button" data-remove="${esc(e.id)}" tabindex="-1" aria-label="${esc(T.remove(s.name))}"><span>
+      const del = swipe ? `<button class="swipe-del" type="button" data-remove="${esc(e.id)}" tabindex="-1" aria-label="${esc(T.remove(name))}"><span>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.8h5V7M6.5 7l.9 12.2h9.2L17.5 7M10 10.5v6M14 10.5v6"/></svg>${T.delete}</span></button>` : "";
       return `<li class="loc-card${swipe ? " swipeable" : ""}" data-id="${esc(e.id || "")}">${remove}${del}
         <button class="loc-open sky ${sky}${night}" type="button" data-open="${i}">
           <span class="nm">${esc(name)}</span><span class="sub">${sub}</span>
           <span class="val">${s ? s.api : "--"}</span>
-          <span class="cat">${s ? bandText(bandFor(s.api)).label : ""}</span>
+          <span class="cat">${band ? bandText(band).label : ""}</span>
           <span class="hl">${s ? hiLo(s) : ""}</span>
         </button></li>`;
     }).join("");
   }
 
+  let worldSeq = 0, worldTimer = 0, worldResults = [];
   function renderSearch(q) {
+    renderDoeSearch(q);
+    clearTimeout(worldTimer);
+    const needle = (q || "").trim();
+    const box = $("worldList");
+    if (!IQ.enabled || needle.length < 2) { box.innerHTML = ""; worldResults = []; return; }
+    box.innerHTML = `<li class="sec">${T.worldSection}</li><li><p class="small pad">${T.searching}</p></li>`;
+    const seq = ++worldSeq;
+    worldTimer = setTimeout(async () => {
+      let res;
+      try { res = await IQ.search(needle, state.lang); } catch { res = null; }
+      if (seq !== worldSeq) return;                         // a newer search is running
+      worldResults = res || [];
+      box.innerHTML = `<li class="sec">${T.worldSection}</li>` + (res == null ? `<li><p class="small pad">${T.worldFail}</p></li>`
+        : !res.length ? `<li><p class="small pad">${T.worldNone}</p></li>`
+        : res.map((r, i) => {
+          const id = "w:" + IQ.cell(r.lat, r.lon);
+          const added = state.saved.includes(id) ? `<span class="added">${T.added}</span>` : "";
+          const d = state.coords ? ` · ${fmtKm(km(state.coords, r))}` : "";
+          return `<li><button class="row" type="button" data-add-world="${i}">
+            <span class="dot globe" aria-hidden="true"></span>
+            <span class="txt"><span class="nm">${esc(r.name)}${added}</span><span class="st">${esc([r.admin, r.country].filter(Boolean).join(", "))}${d}</span></span>
+            <span class="val src">IQAir</span></button></li>`;
+        }).join(""));
+    }, 350);
+  }
+  function renderDoeSearch(q) {
     const needle = (q || "").trim().toLowerCase();
     const list = stations()
       .filter((s) => !needle || s.name.toLowerCase().includes(needle) || s.state.toLowerCase().includes(needle))
       .map((s) => ({ s, d: state.coords ? km(state.coords, s) : null }))
       .sort((a, b) => (a.d != null && b.d != null ? a.d - b.d : a.s.state.localeCompare(b.s.state) || a.s.name.localeCompare(b.s.name)));
-    $("allList").innerHTML = list.length ? list.map(({ s, d }) => {
+    const head = IQ.enabled ? `<li class="sec">${T.doeSection}</li>` : "";
+    $("allList").innerHTML = head + (list.length ? list.map(({ s, d }) => {
       const b = bandFor(s.api);
       const added = state.saved.includes(s.id) ? `<span class="added">${T.added}</span>` : "";
       return `<li><button class="row" type="button" data-add="${esc(s.id)}">
         <span class="dot" style="background:${b.color}"></span>
         <span class="txt"><span class="nm">${esc(s.name)}${added}</span><span class="st">${esc(s.state)}${d != null ? ` · ${fmtKm(d)}` : ""} · ${bandText(b).label}</span></span>
         <span class="val">${s.api}</span></button></li>`;
-    }).join("") : `<li><p class="small" style="padding:12px 0">${T.noMatch}</p></li>`;
+    }).join("") : `<li><p class="small pad">${T.noMatch}</p></li>`);
   }
 
   /* ---------- views (transform/opacity transitions only) ---------- */
@@ -484,7 +639,7 @@
     markDot();
   }
   const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const SKY_BOTTOM = { good: "#1e4c8c", moderate: "#22544b", unhealthy: "#46402a", very: "#4a2f22", hazard: "#3a1b1a", none: "#222a36" };
+  const SKY_BOTTOM = { good: "#1e4c8c", moderate: "#22544b", unhealthy: "#46402a", very: "#4a2f22", hazard: "#3a1b1a", purple: "#331f3f", maroon: "#2e141a", none: "#222a36" };
   function mixHex(a, b, t) {
     const p = (h) => [1, 3, 5].map((k) => parseInt(h.slice(k, k + 2), 16));
     const A = p(a), B = p(b);
@@ -499,7 +654,7 @@
     // Paint the area behind the app in the page's colour so any edge iOS
     // leaves uncovered blends in.
     const base = SKY_BOTTOM[cur?.dataset.band || "none"] || SKY_BOTTOM.none;
-    const col = isNight() ? mixHex(base, "#070b14", 0.4) : base;
+    const col = cur?.classList.contains("night") ? mixHex(base, "#070b14", 0.4) : base;
     if (!document.body.classList.contains("list-open")) {
       document.documentElement.style.backgroundColor = col;
       document.body.style.backgroundColor = col;
@@ -540,6 +695,34 @@
   function removeStation(id) {
     state.saved = state.saved.filter((x) => x !== id);
     store.set(SAVED_KEY, state.saved);
+    if (isWorldId(id)) { delete state.places[id]; delete state.iq[id]; store.set(PLACES_KEY, state.places); }
+    render();
+  }
+  function addWorld(r) {
+    const id = "w:" + IQ.cell(r.lat, r.lon);
+    if (!state.places[id]) { state.places[id] = { name: r.name, admin: r.admin, country: r.country, lat: r.lat, lon: r.lon }; store.set(PLACES_KEY, state.places); }
+    addStation(id);
+    loadWorld(id);
+  }
+  async function loadWorld(id) {
+    const p = state.places[id];
+    if (!p) return;
+    if (state.iq[id] && state.iq[id].error && !state.iq[id].station) { delete state.iq[id]; state.iqStamp++; render(); }
+    const res = await IQ.nearest(p.lat, p.lon);
+    if (!state.places[id]) return;                          // removed while loading
+    state.iq[id] = res; state.iqStamp++;
+    render();
+  }
+  async function loadAllWorld() {
+    if (!IQ.enabled) return;
+    for (const id of state.saved.filter(isWorldId)) await loadWorld(id);   // one at a time (rate limit)
+  }
+  async function loadMeIQ() {
+    if (!IQ.enabled || !state.coords) return;
+    const n = nearest(state.coords);
+    if (n && n.d <= DOE_FAR_KM) { if (state.iqMe) { state.iqMe = null; state.iqStamp++; render(); } return; }
+    const res = await IQ.nearest(state.coords.lat, state.coords.lon);
+    state.iqMe = res && res.station ? res : null; state.iqStamp++;
     render();
   }
   function setLang(lang) {
@@ -685,6 +868,7 @@
     state.coords = await getPosition();
     state.locating = false;
     render();
+    loadMeIQ();
     if (window.JerebuMap?.isOpen()) window.JerebuMap.update(mapContext());
   }
   async function refresh() {
@@ -695,6 +879,8 @@
         <p>${T.loadError}</p><button class="pill" type="button" data-action="reload">${T.tryAgain}</button></section></div></div></section>`;
       return false;
     }
+    loadAllWorld();
+    if (state.coords) loadMeIQ();
     const stamp = data.updated + ":" + (data.stations?.length || 0);
     if (stamp === state.dataStamp) return true;      // nothing new, keep the DOM as is
     state.data = data; state.dataStamp = stamp;
@@ -732,6 +918,8 @@
       return li ? animateRemove(li, rm.dataset.remove) : removeStation(rm.dataset.remove);
     }
     const add = t.closest("[data-add]"); if (add) return addStation(add.dataset.add);
+    const addW = t.closest("[data-add-world]"); if (addW) { const r = worldResults[+addW.dataset.addWorld]; if (r) addWorld(r); return; }
+    const retry = t.closest("[data-retry]"); if (retry) return loadWorld(retry.dataset.retry);
     const act = t.closest("[data-action]");
     if (act?.dataset.action === "locate") return locate();
     if (act?.dataset.action === "reload") return refresh();
@@ -764,6 +952,7 @@
   /* ---------- start ---------- */
   state.saved = store.get(SAVED_KEY, []);
   if (!Array.isArray(state.saved)) state.saved = [];
+  state.places = store.get(PLACES_KEY, {}) || {};
   state.page = Math.max(0, +store.get(PAGE_KEY, 0) || 0);
   const savedLang = store.get(LANG_KEY, null);
   state.lang = I18N[savedLang] ? savedLang : (navigator.language || "").toLowerCase().startsWith("ms") ? "ms" : "en";

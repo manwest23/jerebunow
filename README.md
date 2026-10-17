@@ -11,6 +11,7 @@ A small web app that shows the Malaysian Air Pollutant Index (API / IPU) for the
 | `app.js` | Loads `data/api.json`, finds your nearest station, renders the swipeable pages and locations list |
 | `i18n.js` | All text in English and Bahasa Melayu |
 | `map.js` | Air quality map, loaded on first open |
+| `fx.js` | Weather effects over the haze sky: rain, thunderstorms, sun, moon and stars, clouds, haze |
 | `data/api.json` | Station readings. Ships with **sample data**; replaced by the fetch script |
 | `scripts/fetch-apims.mjs` | Pulls live readings from DOE APIMS plus the MET Malaysia forecast, and writes `data/api.json` with a rolling 24 h history |
 | `.github/workflows/update-api.yml` | Runs the fetch script every hour on GitHub Actions |

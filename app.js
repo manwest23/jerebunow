@@ -97,7 +97,8 @@
     cloud: '<svg viewBox="0 0 24 24"><path d="M7 18.5h10.2a3.8 3.8 0 0 0 .4-7.6 5.6 5.6 0 0 0-10.8 1.4A3.1 3.1 0 0 0 7 18.5Z" fill="#fff"/></svg>',
     rain: '<svg viewBox="0 0 24 24"><path d="M7 14.5h10.2a3.8 3.8 0 0 0 .4-7.6A5.6 5.6 0 0 0 6.8 8.3 3.1 3.1 0 0 0 7 14.5Z" fill="#fff"/><g stroke="#7cc4ff" stroke-width="1.8" stroke-linecap="round"><path d="m8.5 17-1 3M12.5 17l-1 3M16.5 17l-1 3"/></g></svg>',
     storm: '<svg viewBox="0 0 24 24"><path d="M7 14.5h10.2a3.8 3.8 0 0 0 .4-7.6A5.6 5.6 0 0 0 6.8 8.3 3.1 3.1 0 0 0 7 14.5Z" fill="#fff"/><path d="M12.6 14 10 18.2h2.6L11.4 22l3.8-5.2h-2.6l1.2-2.8Z" fill="#ffd23f"/></svg>',
-    haze: '<svg viewBox="0 0 24 24"><g stroke="#e6d8b8" stroke-width="1.8" stroke-linecap="round"><path d="M3.5 8h17M5.5 12h13M3.5 16h17M7.5 20h9"/></g></svg>'
+    haze: '<svg viewBox="0 0 24 24"><g stroke="#e6d8b8" stroke-width="1.8" stroke-linecap="round"><path d="M3.5 8h17M5.5 12h13M3.5 16h17M7.5 20h9"/></g></svg>',
+    moon: '<svg viewBox="0 0 24 24"><path d="M15.5 3.5a8.5 8.5 0 1 0 5 15.2A7 7 0 0 1 15.5 3.5Z" fill="#f2eedf"/></svg>'
   };
   const PERIOD_KEYS = ["morning", "afternoon", "night"];
   // Only rain and thunderstorms make a run wet; haze or cloud is still dry.
@@ -331,29 +332,51 @@
     return h.length > 1 ? `H:${Math.max(...h)}  L:${Math.min(...h)}` : "";
   }
 
+  // Weather right now at a station, from MET's forecast for this part of the day
+  function currentWeather(s) {
+    const fc = forecastFor(s);
+    if (!fc) return null;
+    const day = fc.days[todayIndex(fc.days)];
+    if (!day) return null;
+    const raw = day[PERIOD_KEYS[periodIndexNow()]] || day.summary;
+    return { ...weather(raw), min: day.min, max: day.max };
+  }
+  const hazeLevel = (api) => (api > 100 ? 2 : api > 50 ? 1 : 0);
+  function fxFor(s, seed) {
+    const w = s ? currentWeather(s) : null;
+    return window.JerebuFX ? JerebuFX.markup(w ? w.kind : "none", isNight(), s ? hazeLevel(s.api) : 0, seed) : "";
+  }
+  function heroWeather(s) {
+    const w = currentWeather(s);
+    if (!w) return "";
+    const temp = Number.isFinite(w.min) && Number.isFinite(w.max) ? ` · ${w.min}°–${w.max}°` : "";
+    return `<p class="hero-wx"><span class="wx-ic" aria-hidden="true">${w.kind === "clear" && isNight() ? WX.moon : WX[w.kind]}</span>${esc(w.label)}${temp}</p>`;
+  }
+
   function pageHTML(e, i) {
     const night = isNight() ? " night" : "";
     const tag = e.kind === "me" ? `<p class="hero-tag">${ARROW}${T.myLocation}</p>` : `<p class="hero-tag">&nbsp;</p>`;
     if (!e.s) {
-      return `<section class="page sky sky-none${night}" data-index="${i}" aria-label="${T.myLocation}">
-        <div class="page-inner">
+      return `<section class="slide sky sky-none${night}" data-index="${i}" data-band="none" aria-label="${T.myLocation}">
+        ${fxFor(null, "me")}<div class="page"><div class="page-inner">
           <header class="hero">${tag}<p class="hero-name">${state.locating ? T.locating : T.locationOff}</p><p class="hero-api">--</p></header>
           <section class="card empty"><p>${state.locating ? T.findingNearest : T.locationOffMsg}</p>
             ${state.locating ? "" : `<button class="pill" type="button" data-action="locate">${T.tryAgain}</button>`}</section>
           ${footer()}
-        </div></section>`;
+        </div></div></section>`;
     }
     const s = e.s, band = bandFor(s.api);
     const other = I18N[otherLang()].bands[band.key].label;
     const meta = [e.kind === "me" ? (e.d != null ? T.nearestStation(fmtKm(e.d)) : "") : s.state,
       timeAgo(s.readingTime || state.data.updated)].filter(Boolean).join(" · ");
-    return `<section class="page sky sky-${band.key}${night}" data-index="${i}" aria-label="${esc(s.name)}">
-      <div class="page-inner">
+    return `<section class="slide sky sky-${band.key}${night}" data-index="${i}" data-band="${band.key}" aria-label="${esc(s.name)}">
+      ${fxFor(s, s.id)}<div class="page"><div class="page-inner">
         <header class="hero">
           ${tag}
           <p class="hero-name">${esc(s.name)}</p>
           <p class="hero-api">${s.api}<small>${T.api}</small></p>
           <p class="hero-cat">${bandText(band).label} · <span class="alt">${other}</span></p>
+          ${heroWeather(s)}
           <p class="hero-hl">${hiLo(s)}</p>
           <p class="hero-meta">${esc(meta)}</p>
         </header>
@@ -363,7 +386,7 @@
         ${forecastCard(s)}
         ${tiles(s)}
         ${footer()}
-      </div>
+      </div></div>
     </section>`;
   }
 
@@ -384,6 +407,7 @@
       pager.querySelectorAll("[data-scroll-end]").forEach((el) => { el.scrollLeft = el.scrollWidth; });
       pager.scrollLeft = state.page * pager.clientWidth;
     }
+    requestAnimationFrame(markDot);
     $("dots").innerHTML = list.map((e, i) =>
       `<button class="dot-btn" type="button" role="tab" data-goto="${i}" aria-selected="${i === state.page}"
         aria-label="${esc(e.kind === "me" ? T.myLocation : e.s?.name || "")}">${e.kind === "me" ? ARROW : "<i></i>"}</button>`).join("");
@@ -460,8 +484,26 @@
     markDot();
   }
   const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const SKY_BOTTOM = { good: "#1e4c8c", moderate: "#22544b", unhealthy: "#46402a", very: "#4a2f22", hazard: "#3a1b1a", none: "#222a36" };
+  function mixHex(a, b, t) {
+    const p = (h) => [1, 3, 5].map((k) => parseInt(h.slice(k, k + 2), 16));
+    const A = p(a), B = p(b);
+    return "#" + A.map((v, k) => Math.round(v + (B[k] - v) * t).toString(16).padStart(2, "0")).join("");
+  }
   function markDot() {
     document.querySelectorAll(".dot-btn").forEach((d, i) => d.setAttribute("aria-selected", String(i === state.page)));
+    const slides = $("pager").querySelectorAll(".slide");
+    slides.forEach((sl, i) => sl.classList.toggle("active", i === state.page));
+    const cur = slides[state.page];
+    window.JerebuFX?.activate(cur && !document.body.classList.contains("list-open") && !document.body.classList.contains("map-open") ? cur : null);
+    // Paint the area behind the app in the page's colour so any edge iOS
+    // leaves uncovered blends in.
+    const base = SKY_BOTTOM[cur?.dataset.band || "none"] || SKY_BOTTOM.none;
+    const col = isNight() ? mixHex(base, "#070b14", 0.4) : base;
+    if (!document.body.classList.contains("list-open")) {
+      document.documentElement.style.backgroundColor = col;
+      document.body.style.backgroundColor = col;
+    }
   }
   function showList(show) {
     if (!show) state.editing = false;
@@ -469,6 +511,10 @@
     renderList();
     document.body.classList.toggle("list-open", show);
     setView($("listView"), show);
+    if (show) {
+      window.JerebuFX?.pause();
+      document.documentElement.style.backgroundColor = ""; document.body.style.backgroundColor = "";
+    } else { window.JerebuFX?.resume(); markDot(); }
   }
   const sheet = $("sheet");
   function openSheet() {
@@ -529,6 +575,7 @@
     const view = $("mapView");
     document.body.classList.add("map-open");
     setView(view, true);
+    window.JerebuFX?.pause();
     try {
       await loadMapModule();
       await window.JerebuMap.open(view, mapContext());
@@ -539,6 +586,7 @@
   function closeMap() {
     document.body.classList.remove("map-open");
     setView($("mapView"), false);
+    window.JerebuFX?.resume(); markDot();
     window.JerebuMap?.close();
   }
 
@@ -607,17 +655,7 @@
   const isStandalone = () => window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
   const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   function syncInstallBtn() { $("installBtn").hidden = isStandalone(); }
-  // iOS home-screen apps report a viewport short by the status bar; use the
-  // real screen height there so the app reaches the bottom edge.
-  function setAppHeight() {
-    let h = window.innerHeight;
-    if (isStandalone() && isIOS()) {
-      const portrait = window.innerHeight >= window.innerWidth;
-      const full = portrait ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
-      h = Math.max(h, full);
-    }
-    document.documentElement.style.setProperty("--app-h", h + "px");
-  }
+
   async function onInstall() {
     if (installPrompt) {
       installPrompt.prompt();
@@ -653,8 +691,8 @@
     let data;
     try { data = await loadData(); }
     catch {
-      if (!state.data) $("pager").innerHTML = `<section class="page sky sky-none"><div class="page-inner"><section class="card empty">
-        <p>${T.loadError}</p><button class="pill" type="button" data-action="reload">${T.tryAgain}</button></section></div></section>`;
+      if (!state.data) $("pager").innerHTML = `<section class="slide sky sky-none"><div class="page"><div class="page-inner"><section class="card empty">
+        <p>${T.loadError}</p><button class="pill" type="button" data-action="reload">${T.tryAgain}</button></section></div></div></section>`;
       return false;
     }
     const stamp = data.updated + ":" + (data.stations?.length || 0);
@@ -720,8 +758,7 @@
   $("editBtn").addEventListener("click", () => { state.editing = !state.editing; renderList(); });
   $("search").addEventListener("input", (ev) => renderSearch(ev.target.value));
   let rz;
-  window.addEventListener("resize", () => { setAppHeight(); clearTimeout(rz); rz = setTimeout(() => goTo(state.page, false), 120); });
-  window.addEventListener("orientationchange", () => setTimeout(setAppHeight, 250));
+  window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => goTo(state.page, false), 120); });
   document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
 
   /* ---------- start ---------- */
@@ -733,7 +770,6 @@
   T = I18N[state.lang];
   [$("listView"), $("mapView"), sheet, $("installSheet")].forEach((v) => setView(v, false));
   syncInstallBtn();
-  setAppHeight();
   renderChrome();
 
   refresh().then((ok) => { if (ok) locate(); });

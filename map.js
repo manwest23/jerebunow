@@ -341,8 +341,9 @@ window.JerebuMap = (() => {
       map = new maplibregl.Map({
         container: root.querySelector("#mapCanvas"),
         style: STYLE,
-        center: v.center, zoom: v.zoom, minZoom: 4.5, maxZoom: 12,
-        maxBounds: [[94, -4], [125, 12]],
+        // Whole world: pan anywhere, zoom out to see all continents
+        center: v.center, zoom: v.zoom, minZoom: 1, maxZoom: 13,
+        renderWorldCopies: true,
         attributionControl: { compact: true },
         dragRotate: false, pitchWithRotate: false, touchPitch: false,
         fadeDuration: 150
@@ -362,7 +363,7 @@ window.JerebuMap = (() => {
         // NASA FIRMS fire hotspots (24 h), as soft glowing points over the colour layer
         map.addSource("fires", { type: "geojson", data: firesGeoJSON() });
         map.addLayer({ id: "fires-glow", type: "circle", source: "fires", paint: {
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, ["min", 9, ["+", 3, ["*", 0.6, ["get", "n"]]]], 9, ["min", 22, ["+", 8, ["*", 1.2, ["get", "n"]]]]],
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 1, 1.5, 4, ["min", 9, ["+", 3, ["*", 0.6, ["get", "n"]]]], 9, ["min", 22, ["+", 8, ["*", 1.2, ["get", "n"]]]]],
           "circle-color": "#ff7a1a", "circle-opacity": 0.22, "circle-blur": 0.9 } }, before);
         // Flame icons, bigger when zoomed in and for stronger fires (FRP)
         if (!map.hasImage("flame")) map.addImage("flame", flameImage(), { pixelRatio: 2 });
@@ -371,6 +372,8 @@ window.JerebuMap = (() => {
           "icon-allow-overlap": true, "icon-ignore-placement": true,
           "symbol-sort-key": ["get", "frp"],
           "icon-size": ["interpolate", ["linear"], ["zoom"],
+            1, 0.12,
+            3, ["*", 0.26, ["interpolate", ["linear"], ["get", "frp"], 0, 0.8, 300, 1.25]],
             4, ["*", 0.42, ["interpolate", ["linear"], ["get", "frp"], 0, 0.8, 300, 1.25]],
             7, ["*", 0.7, ["interpolate", ["linear"], ["get", "frp"], 0, 0.8, 300, 1.25]],
             10, ["*", 1.0, ["interpolate", ["linear"], ["get", "frp"], 0, 0.8, 300, 1.25]]]

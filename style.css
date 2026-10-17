@@ -39,6 +39,14 @@ html, body { margin: 0; height: 100%; }
 /* Text sizes are in rem; app.js sets this from the iPhone's Text Size setting */
 html { font-size: 17px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 html { background: var(--list-bg); }
+/* iOS 26 Home Screen apps (WebKit bug 301108): with the see-through status
+   bar, the screen area comes up short by the status bar's height unless the
+   page is at least as tall as the screen. Make the root one status bar
+   taller (capped at the large viewport) so iOS gives the app the full screen.
+   body's overflow: hidden stops this from scrolling. */
+@media (display-mode: standalone) {
+  html { min-height: min(100lvh, calc(100% + env(safe-area-inset-top, 0px))); }
+}
 /* One container for the whole app. */
 .app { position: fixed; inset: 0; overflow: hidden; }
 body {
@@ -711,18 +719,15 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
 /* ---------- Light mode for the list, sheets and map chrome ----------
    Location pages keep their sky colours in both modes, like Apple Weather. */
 @media (prefers-color-scheme: light) {
-  :root { --list-bg: #f2f2f7; --sheet: rgba(246,246,250,.96); }
-  .listview, .sheet-wrap {
+  /* The locations list stays dark (as in Apple Weather) so the white status
+     bar text stays readable; sheets below the status bar go light. */
+  :root { --sheet: rgba(246,246,250,.96); }
+  .sheet-wrap {
     color-scheme: light;
     --ink: #111318; --ink-2: rgba(17,19,24,.72); --ink-3: rgba(17,19,24,.5);
     --sep: rgba(17,19,24,.12); --glass-line: rgba(17,19,24,.1);
     color: var(--ink);
   }
-  .listview .loc-open { --ink: #fff; --ink-2: rgba(255,255,255,.82); color: #fff; }
-  .listview .more-btn { background: rgba(17,19,24,.06); }
-  .listview .searchbar { background: rgba(255,255,255,.85); box-shadow: 0 8px 24px rgba(0,0,0,.12); }
-  .listview .seg { background: rgba(118,118,128,.14); }
-  .listview .seg button[aria-pressed="true"] { background: #fff; color: #111318; }
   .sheet .search { background: rgba(118,118,128,.14); }
   .install-steps li { background: rgba(17,19,24,.05); }
   .sheet-backdrop { background: rgba(0,0,0,.25); }

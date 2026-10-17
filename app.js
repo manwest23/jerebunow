@@ -959,7 +959,7 @@
     if (window.JerebuMap) return Promise.resolve();
     if (!mapScript) mapScript = new Promise((res, rej) => {
       const s = document.createElement("script");
-      s.src = "map.js?v=6"; s.onload = res; s.onerror = rej;
+      s.src = "map.js?v=8"; s.onload = res; s.onerror = rej;
       document.head.appendChild(s);
     });
     return mapScript;

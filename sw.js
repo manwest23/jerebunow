@@ -1,7 +1,7 @@
 /* JerebuNow service worker: network first, so readings are always fresh when
    online; the last copy is shown when offline. Map tiles are left to the
    browser cache. */
-const CACHE = "jerebunow-v8";
+const CACHE = "jerebunow-v9";
 const SHELL = ["./", "index.html", "style.css", "app.js", "config.js", "i18n.js", "iqair.js", "fx.js", "map.js", "manifest.webmanifest",
   "icons/apple-touch-icon.png", "icons/icon-192.png", "data/api.json", "data/world.json", "data/history.json"];
 
@@ -22,4 +22,23 @@ self.addEventListener("fetch", (e) => {
       return res;
     }).catch(() => caches.match(key, { ignoreSearch: true }))
   );
+});
+
+/* Haze alerts */
+self.addEventListener("push", (e) => {
+  let m = {};
+  try { m = e.data ? e.data.json() : {}; } catch { m = { body: e.data && e.data.text() }; }
+  e.waitUntil(self.registration.showNotification(m.title || "JerebuNow", {
+    body: m.body || "", tag: m.tag || "jerebunow", renotify: true,
+    icon: "icons/icon-192.png", badge: "icons/icon-192.png",
+    data: { url: m.url || "./" }
+  }));
+});
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || "./", self.location.href).href;
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+    for (const c of list) if (c.url.startsWith(new URL("./", self.location.href).href) && "focus" in c) return c.focus();
+    return self.clients.openWindow(url);
+  }));
 });

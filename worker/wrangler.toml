@@ -1,0 +1,13 @@
+# Optional: deploy with the Wrangler CLI instead of the dashboard.
+#   npx wrangler kv namespace create SUBS   (paste the id below)
+#   npx wrangler deploy
+name = "jerebunow-alerts"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+[[kv_namespaces]]
+binding = "SUBS"
+id = "PASTE_KV_NAMESPACE_ID"
+
+[triggers]
+crons = ["20 * * * *"]

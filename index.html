@@ -27,6 +27,12 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4.5"/><path d="M12 8.5v7M8.5 12h7"/></svg>
   </button>
 
+  <!-- Haze alerts (shown when alerts are set up) -->
+  <button class="tb-btn alerts-btn" id="alertsBtn" type="button" aria-label="Alerts" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15Z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg>
+    <i class="on-dot" hidden></i>
+  </button>
+
   <!-- Floating bottom bar -->
   <nav class="toolbar" id="toolbar">
     <button class="tb-btn" id="mapBtn" type="button" aria-label="Air quality map">
@@ -77,6 +83,27 @@
         <input id="search" type="search" placeholder="Search station or state" autocomplete="off" enterkeyhint="search">
       </label>
       <div class="list-sheet"><ul class="list" id="allList"></ul><ul class="list" id="worldList"></ul></div>
+    </div>
+  </div>
+
+  <!-- Haze alerts sheet -->
+  <div class="sheet-wrap view" id="alertsSheet">
+    <div class="sheet-backdrop" data-close-alerts></div>
+    <div class="sheet sheet-short" role="dialog" aria-modal="true" aria-labelledby="alertsTitle">
+      <div class="grabber" aria-hidden="true"></div>
+      <div class="sheet-top">
+        <h2 id="alertsTitle">Haze alerts</h2>
+        <button class="link-btn" type="button" data-close-alerts id="alertsClose">Done</button>
+      </div>
+      <p class="alerts-sub" id="alertsSub"></p>
+      <form class="alerts-form" id="alertsForm">
+        <fieldset><legend id="alertsPlaceLabel"></legend><div class="opts" id="alertsPlaces"></div></fieldset>
+        <fieldset><legend id="alertsRulesLabel"></legend><div class="opts" id="alertsRules"></div></fieldset>
+        <p class="alerts-msg" id="alertsMsg" role="status" aria-live="polite"></p>
+        <button class="pill alerts-go" id="alertsGo" type="submit">Turn on alerts</button>
+        <button class="link-btn alerts-off" id="alertsOff" type="button" hidden>Turn off alerts</button>
+        <p class="small alerts-quiet" id="alertsQuiet"></p>
+      </form>
     </div>
   </div>
 

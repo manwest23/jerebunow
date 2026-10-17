@@ -884,6 +884,7 @@
     state.lang = lang; T = I18N[lang];
     store.set(LANG_KEY, lang);
     render(true);
+    syncAlertsBtn(); syncAlertsLang();
     if (window.JerebuMap?.isOpen()) window.JerebuMap.update(mapContext());
   }
 
@@ -947,6 +948,112 @@
     setView($("mapView"), false);
     window.JerebuFX?.resume(); markDot();
     window.JerebuMap?.close();
+  }
+
+  /* ---------- Haze alerts (Web Push via the Cloudflare Worker) ---------- */
+  const ALERTS_URL = ((window.JEREBU_CONFIG && window.JEREBU_CONFIG.alertsUrl) || "").replace(/\/$/, "");
+  const ALERTS_KEY = "jerebunow.alerts";
+  const ALERT_RULES = [["above100", "ruleAbove100"], ["above200", "ruleAbove200"], ["runOk", "ruleRunOk"], ["school", "ruleSchool"]];
+  let alertsCfg = store.get(ALERTS_KEY, null);
+  const pushSupported = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+  function syncAlertsBtn() {
+    const b = $("alertsBtn");
+    b.hidden = !ALERTS_URL;
+    b.setAttribute("aria-label", T.alerts);
+    b.querySelector(".on-dot").hidden = !alertsCfg;
+  }
+  function alertPlaces() {
+    const out = [];
+    const n = state.coords ? nearest(state.coords) : null;
+    if (n && n.d <= DOE_FAR_KM) out.push({ id: n.s.id, label: T.myLocationStation(n.s.name) });
+    for (const id of state.saved) {
+      const s = !isWorldId(id) && stationById(id);
+      if (s && !out.some((o) => o.id === s.id)) out.push({ id: s.id, label: `${s.name} · ${s.state}` });
+    }
+    if (alertsCfg && !out.some((o) => o.id === alertsCfg.station)) {
+      const s = stationById(alertsCfg.station);
+      if (s) out.push({ id: s.id, label: `${s.name} · ${s.state}` });
+    }
+    return out;
+  }
+  function renderAlerts(msg) {
+    $("alertsTitle").textContent = T.alertsTitle;
+    $("alertsSub").textContent = T.alertsSub;
+    $("alertsClose").textContent = T.done;
+    $("alertsPlaceLabel").textContent = T.alertsPlace;
+    $("alertsRulesLabel").textContent = T.alertsRules;
+    $("alertsQuiet").textContent = T.alertsQuiet;
+    const places = alertPlaces();
+    const sel = alertsCfg ? alertsCfg.station : places[0]?.id;
+    $("alertsPlaces").innerHTML = places.map((p) =>
+      `<label class="opt"><input type="radio" name="alertPlace" value="${esc(p.id)}"${p.id === sel ? " checked" : ""}><span>${esc(p.label)}</span></label>`).join("")
+      || `<p class="small">${T.locationOffMsg}</p>`;
+    const rules = alertsCfg ? alertsCfg.rules : ["above100", "runOk"];
+    $("alertsRules").innerHTML = ALERT_RULES.map(([k, t]) =>
+      `<label class="opt"><input type="checkbox" name="alertRule" value="${k}"${rules.includes(k) ? " checked" : ""}><span>${T[t]}</span></label>`).join("");
+    $("alertsGo").textContent = alertsCfg ? T.alertsSave : T.alertsOn;
+    $("alertsOff").textContent = T.alertsOff;
+    $("alertsOff").hidden = !alertsCfg;
+    $("alertsGo").disabled = !places.length;
+    $("alertsMsg").textContent = msg != null ? msg : alertsCfg ? T.alertsEnabled : "";
+  }
+  function openAlerts() {
+    renderAlerts(!pushSupported() ? (isIOS() && !isStandalone() ? T.alertsNeedHome : T.alertsUnsupported) : null);
+    setView($("alertsSheet"), true);
+  }
+  const closeAlerts = () => setView($("alertsSheet"), false);
+  const b64uToBytes = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), (c) => c.charCodeAt(0));
+  async function saveAlerts(ev) {
+    ev.preventDefault();
+    if (!pushSupported()) return renderAlerts(isIOS() && !isStandalone() ? T.alertsNeedHome : T.alertsUnsupported);
+    if (isIOS() && !isStandalone()) return renderAlerts(T.alertsNeedHome);
+    const station = ($("alertsForm").querySelector("input[name=alertPlace]:checked") || {}).value;
+    const rules = [...$("alertsForm").querySelectorAll("input[name=alertRule]:checked")].map((i) => i.value);
+    if (!station || !rules.length) return;
+    $("alertsGo").disabled = true;
+    try {
+      const perm = await Notification.requestPermission();      // must follow the tap directly
+      if (perm !== "granted") return renderAlerts(T.alertsDenied);
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        const { publicKey } = await (await fetch(ALERTS_URL + "/vapid")).json();
+        sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(publicKey) });
+      }
+      const res = await fetch(ALERTS_URL + "/subscribe", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ subscription: sub.toJSON(), station, rules, lang: state.lang, confirm: !alertsCfg })
+      });
+      if (!res.ok) throw new Error(res.status);
+      alertsCfg = { station, rules, endpoint: sub.endpoint, lang: state.lang };
+      store.set(ALERTS_KEY, alertsCfg);
+      syncAlertsBtn();
+      renderAlerts(T.alertsEnabled);
+    } catch {
+      renderAlerts(T.alertsFail);
+    } finally { $("alertsGo").disabled = false; }
+  }
+  async function turnOffAlerts() {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      const endpoint = (sub && sub.endpoint) || (alertsCfg && alertsCfg.endpoint);
+      if (endpoint) await fetch(ALERTS_URL + "/unsubscribe", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ endpoint }) }).catch(() => {});
+      if (sub) await sub.unsubscribe().catch(() => {});
+    } catch { /* still clear locally */ }
+    alertsCfg = null; store.set(ALERTS_KEY, null);
+    syncAlertsBtn(); renderAlerts(T.alertsDisabled);
+  }
+  // Keep the server's language in step with the app
+  async function syncAlertsLang() {
+    if (!alertsCfg || !ALERTS_URL || alertsCfg.lang === state.lang || !pushSupported()) return;
+    try {
+      const sub = await (await navigator.serviceWorker.ready).pushManager.getSubscription();
+      if (!sub) return;
+      await fetch(ALERTS_URL + "/subscribe", { method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ subscription: sub.toJSON(), station: alertsCfg.station, rules: alertsCfg.rules, lang: state.lang }) });
+      alertsCfg.lang = state.lang; store.set(ALERTS_KEY, alertsCfg);
+    } catch { /* next time */ }
   }
 
   /* ---------- Toast ---------- */
@@ -1180,6 +1287,7 @@
     const addW = t.closest("[data-add-world]"); if (addW) { const r = worldResults[+addW.dataset.addWorld]; if (r) addWorld(r); return; }
     const retry = t.closest("[data-retry]"); if (retry) return loadWorld(retry.dataset.retry);
     const sh = t.closest("[data-share]"); if (sh) return shareEntry(+sh.dataset.share);
+    if (t.closest("[data-close-alerts]")) return closeAlerts();
     const act = t.closest("[data-action]");
     if (act?.dataset.action === "locate") return locate();
     if (act?.dataset.action === "reload") return refresh();
@@ -1188,7 +1296,8 @@
   });
   document.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape") {
-      if ($("installSheet").classList.contains("open")) closeInstall();
+      if ($("alertsSheet").classList.contains("open")) closeAlerts();
+      else if ($("installSheet").classList.contains("open")) closeInstall();
       else if (sheet.classList.contains("open")) closeSheet();
       else if (document.body.classList.contains("map-open")) closeMap();
       else if (document.body.classList.contains("list-open")) showList(false);
@@ -1201,6 +1310,9 @@
   });
   $("mapBtn").addEventListener("click", openMap);
   $("installBtn").addEventListener("click", onInstall);
+  $("alertsBtn").addEventListener("click", openAlerts);
+  $("alertsForm").addEventListener("submit", saveAlerts);
+  $("alertsOff").addEventListener("click", turnOffAlerts);
   $("searchOpen").addEventListener("click", openSheet);
   $("listBtn").addEventListener("click", () => showList(true));
   $("editBtn").addEventListener("click", () => { state.editing = !state.editing; renderList(); });
@@ -1217,8 +1329,9 @@
   const savedLang = store.get(LANG_KEY, null);
   state.lang = I18N[savedLang] ? savedLang : (navigator.language || "").toLowerCase().startsWith("ms") ? "ms" : "en";
   T = I18N[state.lang];
-  [$("listView"), $("mapView"), sheet, $("installSheet")].forEach((v) => setView(v, false));
+  [$("listView"), $("mapView"), sheet, $("installSheet"), $("alertsSheet")].forEach((v) => setView(v, false));
   syncInstallBtn();
+  syncAlertsBtn();
   renderChrome();
 
   refresh().then((ok) => { if (ok) locate(); });

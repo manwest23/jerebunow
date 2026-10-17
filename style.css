@@ -229,6 +229,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 }
 .toolbar > * { pointer-events: auto; }
 body.list-open .pager, body.map-open .pager { transform: scale(.94); opacity: .4; }
+body.list-open .alerts-btn, body.map-open .alerts-btn,
 body.list-open .install-btn, body.map-open .install-btn { opacity: 0; transform: scale(.8); pointer-events: none; }
 body.list-open .toolbar, body.map-open .toolbar { transform: translateY(24px); opacity: 0; pointer-events: none; }
 body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; }
@@ -723,3 +724,29 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
   .sheet-backdrop { background: rgba(0,0,0,.25); }
 }
 .map-legend .k-fire { background: radial-gradient(circle, #ff6a1a 0 35%, rgba(255,122,26,.35) 40% 100%); }
+
+/* ---------- Haze alerts ---------- */
+.alerts-btn {
+  position: absolute; z-index: 6;
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  left: max(16px, env(safe-area-inset-left, 0px));
+  width: 44px; height: 44px;
+  transition: opacity .25s ease, transform .3s cubic-bezier(.2,.8,.2,1);
+}
+.alerts-btn svg { width: 21px; height: 21px; }
+.alerts-btn .on-dot { position: absolute; top: 9px; right: 10px; width: 9px; height: 9px; border-radius: 50%; background: var(--run-go); box-shadow: 0 0 0 2px rgba(40,46,58,.9); }
+.alerts-sub { margin: 6px 0 4px; font-size: 14px; color: var(--ink-2); }
+.alerts-form fieldset { border: 0; margin: 14px 0 0; padding: 0; min-width: 0; }
+.alerts-form legend { padding: 0; margin-bottom: 8px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+.opts { display: grid; gap: 1px; border-radius: 14px; overflow: hidden; background: var(--sep); }
+.opt { display: flex; align-items: center; gap: 12px; padding: 13px 14px; background: rgba(255,255,255,.06); cursor: pointer; font-size: 15px; }
+.opt input { width: 20px; height: 20px; margin: 0; accent-color: #2f88ff; flex: none; }
+.opt span { min-width: 0; }
+.alerts-msg { min-height: 1.4em; margin: 12px 0 0; font-size: 14px; color: var(--ink-2); }
+.alerts-go { width: 100%; margin-top: 10px; padding: 13px; background: #2f88ff; border: 0; color: #fff; }
+.alerts-go:disabled { opacity: .5; }
+.alerts-off { display: block; margin: 10px auto 0; color: var(--hazard); }
+.alerts-quiet { text-align: center; margin-top: 10px; }
+@media (prefers-color-scheme: light) {
+  .opt { background: rgba(255,255,255,.9); }
+}

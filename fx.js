@@ -27,15 +27,36 @@ window.JerebuFX = (() => {
     for (let i = 0; i < n; i++) {
       const top = -6 + i * (34 / n) + r() * 8;
       const left = -30 + r() * 60;
-      const scale = 0.8 + r() * 0.7;
-      const dur = 70 + r() * 70;
+      const far = /far/.test(tone), wisp = /wisp/.test(tone);
+      const scale = (far ? 0.6 : wisp ? 0.7 : 0.8) + r() * (far ? 0.4 : 0.7);
+      const dur = (far ? 110 : wisp ? 90 : 55) + r() * (far ? 60 : 50);
       out += `<span class="fx-cloud ${tone}" style="top:${top.toFixed(1)}%;left:${left.toFixed(1)}%;--s:${scale.toFixed(2)};animation-duration:${dur.toFixed(0)}s;animation-delay:-${(r() * dur).toFixed(0)}s"></span>`;
     }
     return out;
   }
 
-  const fog = (n) => Array.from({ length: n }, (_, i) =>
-    `<span class="fx-fog" style="top:${18 + i * 22}%;animation-duration:${38 + i * 14}s;animation-delay:-${i * 9}s"></span>`).join("");
+  const fog = (n, tone = "") => Array.from({ length: n }, (_, i) =>
+    `<span class="fx-fog ${tone}" style="top:${(tone ? 8 : 18) + i * (tone ? 18 : 22)}%;animation-duration:${(tone ? 22 : 38) + i * (tone ? 7 : 14)}s;animation-delay:-${i * 9}s"></span>`).join("");
+
+  // Tiny drifting specks: sunlit dust by day, haze particles in haze
+  function motes(r, n, tone) {
+    let out = "";
+    for (let i = 0; i < n; i++) {
+      const dur = 16 + r() * 14;
+      out += `<i style="left:${(r() * 100).toFixed(1)}%;top:${(20 + r() * 75).toFixed(1)}%;--sz:${(2 + r() * 3).toFixed(1)}px;--o:${(0.25 + r() * 0.4).toFixed(2)};--dx:${(-40 + r() * 80).toFixed(0)}px;animation-duration:${dur.toFixed(1)}s;animation-delay:-${(r() * dur).toFixed(1)}s"></i>`;
+    }
+    return `<div class="fx-motes ${tone}">${out}</div>`;
+  }
+  // Soft light beams fanning out from the sun
+  const beams = (faint) => `<div class="fx-beams${faint ? " faint" : ""}"><i></i><i></i><i></i></div>`;
+  // An occasional shooting star (one every ~11 s)
+  const shootingStar = (r) => `<i class="fx-shoot" style="top:${(6 + r() * 18).toFixed(1)}%;right:${(4 + r() * 30).toFixed(1)}%;animation-delay:-${(r() * 11).toFixed(1)}s"></i>`;
+  // A lightning bolt that strikes in step with the flash (same timing)
+  function bolt(r, delay) {
+    const x = (15 + r() * 60).toFixed(1);
+    return `<svg class="fx-bolt" style="left:${x}%;animation-delay:-${delay}s" viewBox="0 0 60 260" aria-hidden="true">
+      <path d="M34 0 18 96h16L10 178h14L4 260l44-118H32L52 62H36L46 0Z"/></svg>`;
+  }
 
   /**
    * kind: storm | rain | snow | clear | cloud | haze | none
@@ -45,19 +66,22 @@ window.JerebuFX = (() => {
     const r = rng(seed + kind + night);
     let parts = "";
     if (kind === "clear") {
-      parts = night ? `${stars(r, 46)}<div class="fx-moon"></div>`
-        : `<div class="fx-sun"><i class="glow"></i><i class="rays"></i><i class="disc"></i></div>`;
+      parts = night
+        ? `${stars(r, 46)}<div class="fx-moon"><i class="halo"></i><i class="body"></i></div>${shootingStar(r)}`
+        : `${beams(false)}<div class="fx-sun"><i class="glow"></i><i class="rays"></i><i class="disc"></i></div>${clouds(r, 2, "wisp")}${motes(r, 14, "light")}`;
     } else if (kind === "cloud") {
-      parts = (night ? stars(r, 18) : `<div class="fx-sun peek"><i class="glow"></i><i class="disc"></i></div>`) + clouds(r, 5, night ? "night" : "");
+      parts = (night ? stars(r, 18) : `${beams(true)}<div class="fx-sun peek"><i class="glow"></i><i class="rays"></i><i class="disc"></i></div>`)
+        + clouds(r, 3, (night ? "night" : "") + " far") + clouds(r, 3, night ? "night" : "");
     } else if (kind === "haze") {
-      parts = (night ? "" : `<div class="fx-sun dim"><i class="glow"></i><i class="disc"></i></div>`) + fog(4);
+      parts = (night ? "" : `<div class="fx-sun dim"><i class="glow"></i><i class="disc"></i></div>`) + fog(5, "thick") + motes(r, 26, "haze");
     } else if (kind === "rain") {
-      parts = clouds(r, 4, "dark") + `<canvas class="fx-drops" data-intensity="1"></canvas>`;
+      parts = clouds(r, 4, "dark") + `<canvas class="fx-drops" data-intensity="1"></canvas>` + `<span class="fx-fog mist" style="top:78%"></span>`;
     } else if (kind === "snow") {
-      parts = clouds(r, 3, night ? "night" : "") + `<canvas class="fx-drops" data-intensity="0.9" data-mode="snow"></canvas>`;
+      parts = clouds(r, 3, (night ? "night" : "") + " far") + `<canvas class="fx-drops" data-intensity="0.9" data-mode="snow"></canvas>`;
     } else if (kind === "storm") {
-      parts = clouds(r, 5, "dark") + `<canvas class="fx-drops" data-intensity="1.7"></canvas>`
-        + `<div class="fx-flash" style="animation-delay:-${(r() * 9).toFixed(1)}s"></div>`;
+      const delay = (r() * 9).toFixed(1);
+      parts = clouds(r, 5, "dark") + bolt(r, delay) + `<canvas class="fx-drops" data-intensity="1.7"></canvas>`
+        + `<div class="fx-flash" style="animation-delay:-${delay}s"></div>`;
     }
     const smog = hazy ? `<div class="fx-smog l${hazy}"></div>` : "";
     return `<div class="fx wx-${kind}${night ? " is-night" : ""}" aria-hidden="true">${parts}${smog}</div>`;

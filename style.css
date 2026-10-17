@@ -549,11 +549,9 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
 .fx:has(.fx-smog.l2) .fx-sun { opacity: .62; filter: sepia(.55) saturate(1.3); }
 
 /* Moon + stars */
-.fx-moon {
-  position: absolute; top: 9%; right: 14%; width: 62px; height: 62px; border-radius: 50%;
-  box-shadow: inset -15px 7px 0 0 #f2eedf, 0 0 50px 6px rgba(242,238,223,.12);
-  transform: rotate(-18deg);
-}
+.fx-moon { position: absolute; top: 9%; right: 14%; width: 62px; height: 62px; }
+.fx-moon .body { position: absolute; inset: 0; border-radius: 50%; box-shadow: inset -15px 7px 0 0 #f2eedf; transform: rotate(-18deg); }
+.fx-moon .halo { position: absolute; inset: -46px; border-radius: 50%; background: radial-gradient(circle, rgba(242,238,223,.22) 0%, rgba(242,238,223,.08) 40%, rgba(242,238,223,0) 70%); animation: moonglow 7s ease-in-out infinite; }
 .fx-stars i { position: absolute; border-radius: 50%; background: #fff; animation: twinkle 4s ease-in-out infinite; }
 
 /* Clouds: soft gradient blobs, no blur filter (cheap to animate) */
@@ -610,12 +608,14 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
 
 /* Rain, storms and snow fall behind the cards: on those pages the cards
    become frosted glass (only on the visible page, to keep swiping smooth). */
-.slide.active:has(.wx-rain, .wx-storm, .wx-snow) .card {
+.slide.active:has(.fx:not(.wx-none)) .card,
+.slide.active:has(.fx:not(.wx-none)) .gl,
+.slide.active:has(.fx:not(.wx-none)) .share-btn {
   background: rgba(34, 40, 52, 0.38);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
           backdrop-filter: blur(18px) saturate(140%);
 }
-.slide:not(.active):has(.wx-rain, .wx-storm, .wx-snow) .card { background: rgba(34, 40, 52, 0.42); }
+.slide:not(.active):has(.fx:not(.wx-none)) .card { background: rgba(34, 40, 52, 0.42); }
 
 /* ---------- Map: names, IQAir rings, legend key ---------- */
 .mk em {
@@ -775,4 +775,73 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
 @media (prefers-color-scheme: light) {
   .sheet-wrap .seg { background: rgba(118,118,128,.14); }
   .sheet-wrap .seg button[aria-pressed="true"] { background: #fff; color: #111318; }
+}
+
+/* ---------- More weather motion (all behind the frosted cards) ---------- */
+/* Light beams from the sun (clear and cloudy days) */
+.fx-beams { position: absolute; top: -10%; right: -10%; width: 120%; height: 90%; transform-origin: 85% 8%; animation: beams 16s ease-in-out infinite; }
+.fx-beams i {
+  position: absolute; top: 8%; right: 15%; width: 26%; height: 100%;
+  transform-origin: 50% 0;
+  background: linear-gradient(180deg, rgba(255,240,200,.16), rgba(255,240,200,0) 75%);
+  -webkit-mask: linear-gradient(90deg, transparent, #000 40%, #000 60%, transparent);
+          mask: linear-gradient(90deg, transparent, #000 40%, #000 60%, transparent);
+}
+.fx-beams i:nth-child(1) { transform: rotate(18deg); }
+.fx-beams i:nth-child(2) { transform: rotate(38deg); opacity: .8; }
+.fx-beams i:nth-child(3) { transform: rotate(58deg); opacity: .6; }
+.fx-beams.faint { opacity: .5; }
+/* Under unhealthy air the beams fade, like the dulled sun */
+.fx:has(.fx-smog.l2) .fx-beams { opacity: .35; }
+
+/* Drifting specks */
+.fx-motes i {
+  position: absolute; width: var(--sz); height: var(--sz); border-radius: 50%;
+  opacity: var(--o); animation: mote 22s linear infinite;
+}
+.fx-motes.light i { background: rgba(255,246,214,.95); box-shadow: 0 0 6px rgba(255,236,170,.6); }
+.fx-motes.haze i { background: rgba(232,214,176,.9); }
+
+/* Shooting star */
+.fx-shoot {
+  position: absolute; width: 110px; height: 2px; border-radius: 2px; opacity: 0;
+  background: linear-gradient(90deg, #fff, rgba(255,255,255,0));
+  animation: shoot 11s linear infinite;
+}
+
+/* Cloud layers */
+.fx-cloud.far { opacity: .55; }
+.fx-cloud.wisp { opacity: .45; height: auto; aspect-ratio: 3.6; }
+
+/* Thicker, faster-moving haze bands */
+.fx-fog.thick { background: linear-gradient(180deg, rgba(232,214,176,0), rgba(232,214,176,.22) 50%, rgba(232,214,176,0)); animation-name: fogthick; }
+@keyframes fogthick { from { transform: translateX(-18%); } to { transform: translateX(18%); } }
+.fx-motes.haze i { box-shadow: 0 0 5px rgba(232,214,176,.5); }
+
+/* Low mist under rain */
+.fx-fog.mist { height: 30%; background: linear-gradient(180deg, rgba(190,205,225,0), rgba(190,205,225,.14) 55%, rgba(190,205,225,0)); }
+
+/* Lightning bolt, in step with the flash */
+.fx-bolt { position: absolute; top: 4%; width: 54px; height: 240px; opacity: 0; animation: flash 9s linear infinite; }
+.fx-bolt path { fill: #fdfdf2; filter: drop-shadow(0 0 10px rgba(220,230,255,.9)); }
+
+@keyframes beams { 0%, 100% { transform: rotate(-3deg); opacity: .7; } 50% { transform: rotate(3deg); opacity: 1; } }
+@keyframes mote {
+  0% { transform: translate(0, 0); opacity: 0; }
+  12% { opacity: var(--o); }
+  88% { opacity: var(--o); }
+  100% { transform: translate(var(--dx), -160px); opacity: 0; }
+}
+@keyframes shoot {
+  0%, 90% { opacity: 0; transform: rotate(-32deg) translateX(0); }
+  91% { opacity: 1; }
+  97% { opacity: .9; }
+  100% { opacity: 0; transform: rotate(-32deg) translateX(-340px); }
+}
+@keyframes moonglow { 0%, 100% { opacity: .75; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
+
+/* Reduced motion: keep a calm still picture */
+@media (prefers-reduced-motion: reduce) {
+  .fx-motes i { opacity: var(--o); transform: none; }
+  .fx-shoot, .fx-bolt { opacity: 0; }
 }

@@ -7,7 +7,12 @@ compatibility_date = "2026-09-01"
 
 [[kv_namespaces]]
 binding = "SUBS"
-id = "PASTE_KV_NAMESPACE_ID"
+id = "a25359d1bc7a4b93b81cc6568b7660d1"
 
 [triggers]
 crons = ["20 * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "jerebunow-stats"
+database_id = "07a1a3c7-a82b-4158-affe-88c2863fb418"

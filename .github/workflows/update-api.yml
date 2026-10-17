@@ -1,0 +1,34 @@
+name: Update JerebuNow data
+
+on:
+  schedule:
+    - cron: "10 * * * *"   # every hour at :10 (DOE publishes on the hour)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Fetch APIMS
+        env:
+          APIMS_URL: ${{ secrets.APIMS_URL }}
+        run: |
+          if [ -z "$APIMS_URL" ]; then
+            echo "APIMS_URL secret not set yet, keeping sample data."
+            exit 0
+          fi
+          node scripts/fetch-apims.mjs
+      - name: Commit data
+        run: |
+          git config user.name "haze-bot"
+          git config user.email "haze-bot@users.noreply.github.com"
+          git add data/api.json
+          git diff --cached --quiet || git commit -m "Update JerebuNow data"
+          git push

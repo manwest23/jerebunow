@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2b5fa8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>JerebuNow</title>
+  <meta name="apple-mobile-web-app-title" content="JerebuNow">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-cat="loading">
+  <div class="sky" aria-hidden="true"></div>
+
+  <main class="app">
+    <p class="brand">Jerebu<b>Now</b></p>
+
+    <header class="hero">
+      <p class="hero-place" id="place">
+        <svg class="pin" viewBox="0 0 12 12" aria-hidden="true"><path d="M11 1 1 5.4l4.6 1 1 4.6Z"/></svg>
+        <span id="placeName">Locating…</span>
+      </p>
+      <p class="hero-sub" id="placeSub">&nbsp;</p>
+      <p class="hero-api"><span id="apiValue">--</span></p>
+      <p class="hero-cat" id="catLabel">Air Pollutant Index</p>
+      <p class="hero-meta" id="heroMeta">&nbsp;</p>
+    </header>
+
+    <div class="notice" id="notice" hidden></div>
+
+    <section class="card run" id="runCard" aria-labelledby="h-run">
+      <h2 class="card-head" id="h-run">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="10" cy="2.6" r="1.4"/><path d="m4.5 6.5 3-1.5 2.5 2 2 .5M7.5 5l-1 4 2.5 2-1 3.5M6.5 9 4 11.5H1.5"/></svg>
+        Running outside
+      </h2>
+      <div class="run-top">
+        <span class="run-badge" id="runBadge">--</span>
+        <p class="run-verdict" id="runVerdict">Checking conditions…</p>
+      </div>
+      <ul class="run-factors" id="runFactors"></ul>
+      <p class="run-best" id="runBest"></p>
+    </section>
+
+    <section class="card" aria-labelledby="h-24h">
+      <h2 class="card-head" id="h-24h">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.5V8l2.5 1.5"/></svg>
+        Last 24 hours
+      </h2>
+      <div class="chart" id="chart"></div>
+      <div class="chart-axis"><span>24h ago</span><span>12h</span><span>Now</span></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-fc">
+      <h2 class="card-head" id="h-fc">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="12" rx="2"/><path d="M1.5 6.5h13M5 1v3M11 1v3"/></svg>
+        7-day forecast
+      </h2>
+      <ul class="fc" id="forecast"></ul>
+      <p class="small fc-src" id="fcSource">&nbsp;</p>
+    </section>
+
+    <div class="grid2">
+      <section class="card" aria-labelledby="h-pol">
+        <h2 class="card-head" id="h-pol">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5" cy="9" r="2.5"/><circle cx="11" cy="6" r="3"/><circle cx="10" cy="12.5" r="1.5"/></svg>
+          Main pollutant
+        </h2>
+        <p class="big" id="pollutant">--</p>
+        <p class="small" id="pollutantNote">&nbsp;</p>
+      </section>
+      <section class="card" aria-labelledby="h-trend">
+        <h2 class="card-head" id="h-trend">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 12 6 7.5l3 3 5.5-6"/><path d="M10.5 4.5h4v4"/></svg>
+          Trend
+        </h2>
+        <p class="big" id="trend">--</p>
+        <p class="small" id="trendNote">&nbsp;</p>
+      </section>
+    </div>
+
+    <section class="card" aria-labelledby="h-adv">
+      <h2 class="card-head" id="h-adv">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14s-5.5-3.3-5.5-7.2A3 3 0 0 1 8 4.6a3 3 0 0 1 5.5 2.2C13.5 10.7 8 14 8 14Z"/></svg>
+        Health advice
+      </h2>
+      <p class="advice" id="advice">&nbsp;</p>
+      <div class="scale" id="scale" aria-label="API scale"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-near">
+      <div class="card-row">
+        <h2 class="card-head" id="h-near">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14.5s5-4.6 5-8.5a5 5 0 0 0-10 0c0 3.9 5 8.5 5 8.5Z"/><circle cx="8" cy="6" r="1.8"/></svg>
+          Nearby stations
+        </h2>
+        <button class="link-btn" id="allBtn" type="button">All stations</button>
+      </div>
+      <ul class="list" id="nearList"></ul>
+    </section>
+
+    <footer class="foot">
+      <button class="pill" id="locBtn" type="button">Use my location</button>
+      <button class="pill" id="refreshBtn" type="button">Refresh</button>
+      <p id="sourceNote">Data: Department of Environment Malaysia (APIMS).</p>
+      <p>Forecast: MET Malaysia via data.gov.my.</p>
+      <p>For official readings visit <a href="https://eqms.doe.gov.my/APIMS/main" target="_blank" rel="noopener">eqms.doe.gov.my</a>.</p>
+      <p class="credit">Developed by <b>manwest</b></p>
+    </footer>
+  </main>
+
+  <!-- All-stations sheet -->
+  <div class="sheet-wrap" id="sheet" hidden>
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div class="grabber" aria-hidden="true"></div>
+      <div class="sheet-top">
+        <h2 id="sheetTitle">All stations</h2>
+        <button class="link-btn" type="button" data-close>Done</button>
+      </div>
+      <label class="search">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.8"/><path d="m10.5 10.5 3.5 3.5"/></svg>
+        <input id="search" type="search" placeholder="Search station or state" autocomplete="off">
+      </label>
+      <ul class="list list-sheet" id="allList"></ul>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

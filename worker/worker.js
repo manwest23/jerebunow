@@ -98,7 +98,7 @@ async function vapidHeader(keys, endpoint) {
 }
 
 /* ---------- Web Push payload encryption (RFC 8291, aes128gcm) ---------- */
-export async function encryptPayload(sub, plaintext, salt = crypto.getRandomValues(new Uint8Array(16)), asKeys) {
+async function encryptPayload(sub, plaintext, salt = crypto.getRandomValues(new Uint8Array(16)), asKeys) {
   const uaPublic = b64u.dec(sub.keys.p256dh);
   const auth = b64u.dec(sub.keys.auth);
   const as = asKeys || await crypto.subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, ["deriveBits"]);
@@ -235,4 +235,3 @@ export default {
   fetch: (req, env) => handle(req, env).catch((e) => json({ error: String(e.message || e) }, 500)),
   scheduled: (event, env, ctx) => ctx.waitUntil(check(env))
 };
-export { crossed, pick, check, handle };

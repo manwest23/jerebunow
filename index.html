@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="app" id="app">
   <!-- Swipeable location pages -->
   <main class="pager" id="pager" aria-label="Locations"></main>
 
@@ -39,7 +40,7 @@
 
   <!-- Locations list -->
   <section class="listview view" id="listView" aria-labelledby="listTitle">
-    <div class="list-inner">
+    <div class="list-scroll" id="listScroll"><div class="list-inner">
       <div class="list-top">
         <h1 id="listTitle">Jerebu<b>Now</b></h1>
         <button class="more-btn" id="editBtn" type="button">Edit</button>
@@ -50,7 +51,7 @@
         <p id="listSource">&nbsp;</p>
         <p class="credit" id="listCredit">Developed by <b>manwest</b></p>
       </footer>
-    </div>
+    </div></div>
     <button class="searchbar" id="searchOpen" type="button">
       <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.8"/><path d="m10.5 10.5 3.5 3.5"/></svg>
       <span id="searchLabel">Search for a station or state</span>
@@ -92,6 +93,8 @@
       <button class="pill install-done" id="installDone" type="button" data-close-install>OK</button>
     </div>
   </div>
+
+</div>
 
   <script src="i18n.js"></script>
   <script src="app.js"></script>

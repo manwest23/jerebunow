@@ -36,6 +36,11 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; }
+html { background: var(--list-bg); }
+/* One container sized to the real screen. iOS home-screen apps with a
+   translucent status bar report a viewport that is short by the status bar,
+   so fixed "inset: 0" layers stop early; everything lives in here instead. */
+.app { position: fixed; top: 0; left: 0; right: 0; height: var(--app-h, 100vh); overflow: hidden; }
 body {
   font: 15px/1.4 var(--font);
   color: var(--ink);
@@ -67,7 +72,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 
 /* ---------- Pager ---------- */
 .pager {
-  position: fixed; inset: 0;
+  position: absolute; inset: 0;
   display: flex; overflow-x: auto; overflow-y: hidden;
   scroll-snap-type: x mandatory;
   overscroll-behavior-x: contain;
@@ -208,7 +213,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 
 /* ---------- Bottom toolbar ---------- */
 .toolbar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 5;
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 0 var(--gutter-r) calc(env(safe-area-inset-bottom, 0px) + 14px) var(--gutter-l);
   pointer-events: none;
@@ -244,12 +249,8 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
 .dot-btn[aria-selected="true"] svg { fill: var(--ink); }
 
 /* ---------- Locations list ---------- */
-.listview {
-  position: fixed; inset: 0; z-index: 10;
-  background: var(--list-bg);
-  overflow-y: auto; -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-}
+.listview { position: absolute; inset: 0; z-index: 10; background: var(--list-bg); overflow: hidden; }
+.list-scroll { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .list-inner {
   max-width: 600px; margin: 0 auto;
   padding-block: calc(env(safe-area-inset-top, 0px) + 20px) calc(env(safe-area-inset-bottom, 0px) + 100px);
@@ -283,7 +284,7 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
 }
 .remove-btn svg { width: 14px; height: 14px; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; }
 .searchbar {
-  position: fixed; left: 50%; transform: translateX(-50%);
+  position: absolute; left: 50%; z-index: 2; transform: translateX(-50%);
   bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
   width: min(560px, calc(100% - 32px));
   display: flex; align-items: center; gap: 10px;
@@ -296,7 +297,7 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
 .searchbar svg { width: 18px; height: 18px; fill: none; stroke: var(--ink-2); stroke-width: 1.8; stroke-linecap: round; flex: none; }
 
 /* ---------- Sheet ---------- */
-.sheet-wrap { position: fixed; inset: 0; z-index: 30; display: flex; align-items: flex-end; justify-content: center; }
+.sheet-wrap { position: absolute; inset: 0; z-index: 30; display: flex; align-items: flex-end; justify-content: center; }
 .sheet-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.4); opacity: 0; transition: opacity .3s ease; }
 .sheet-wrap.open .sheet-backdrop { opacity: 1; }
 .sheet {
@@ -367,7 +368,7 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
 .list-inner .foot { padding-top: 22px; }
 
 /* ---------- Map ---------- */
-.mapview { position: fixed; inset: 0; z-index: 15; background: #1b1e24; overflow: hidden; }
+.mapview { position: absolute; inset: 0; z-index: 15; background: #1b1e24; overflow: hidden; }
 .map-status { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: var(--ink-2); font-size: 15px; padding: 24px; text-align: center; pointer-events: none; }
 .mapview .map-canvas { position: absolute; inset: 0; }
 .map-canvas .maplibregl-canvas { outline: none; }
@@ -468,7 +469,7 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
 
 /* ---------- Add to Home Screen ---------- */
 .install-btn {
-  position: fixed; z-index: 6;
+  position: absolute; z-index: 6;
   top: calc(env(safe-area-inset-top, 0px) + 14px);
   right: max(16px, env(safe-area-inset-right, 0px));
   width: 44px; height: 44px;
@@ -488,3 +489,19 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
 .install-steps li > span { min-width: 0; }
 .ico-share { width: 20px; height: 20px; vertical-align: -4px; fill: none; stroke: #2f88ff; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .install-done { width: 100%; margin-top: 16px; padding: 13px; background: #2f88ff; border: 0; }
+
+/* ---------- Swipe to delete (locations list) ---------- */
+.loc-card.swipeable { border-radius: var(--radius); overflow: hidden; isolation: isolate; }
+.swipe-del {
+  position: absolute; top: 0; bottom: 0; right: 0; left: 0; z-index: 0;
+  display: flex; justify-content: flex-end; align-items: stretch;
+  border: 0; border-radius: var(--radius); padding: 0; cursor: pointer;
+  background: var(--hazard); color: #fff;
+  visibility: hidden;
+}
+.swipe-del span { width: 92px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; font-size: 14px; font-weight: 600; }
+.swipe-del svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.loc-card.swiping .swipe-del, .loc-card.open .swipe-del { visibility: visible; }
+.loc-card.swipeable .loc-open { position: relative; z-index: 1; touch-action: pan-y; transition: transform .32s cubic-bezier(.2,.8,.2,1); will-change: transform; }
+.loc-card.dragging .loc-open { transition: none; }
+.loc-card.removing { overflow: hidden; transition: height .28s ease, opacity .22s ease, margin .28s ease; opacity: 0; margin-bottom: -12px; }

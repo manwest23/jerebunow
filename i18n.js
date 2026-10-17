@@ -98,6 +98,7 @@ window.JEREBU_I18N = {
     added: "Added",
     noMatch: "No station matches that search.",
     remove: (n) => `Remove ${n}`,
+    delete: "Delete",
     listSource: "Air quality: DOE Malaysia (APIMS). Forecast: MET Malaysia.",
     language: "Language",
 
@@ -229,6 +230,7 @@ window.JEREBU_I18N = {
     added: "Ditambah",
     noMatch: "Tiada stesen yang sepadan.",
     remove: (n) => `Buang ${n}`,
+    delete: "Padam",
     listSource: "Kualiti udara: JAS Malaysia (APIMS). Ramalan: MET Malaysia.",
     language: "Bahasa",
 

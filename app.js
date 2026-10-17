@@ -417,7 +417,10 @@
       const name = e.kind === "me" ? (s ? s.name : state.locating ? T.locating : T.locationOff) : s.name;
       const remove = state.editing && e.kind === "saved"
         ? `<button class="remove-btn" type="button" data-remove="${esc(e.id)}" aria-label="${esc(T.remove(s.name))}"><svg viewBox="0 0 14 14"><path d="M3 7h8"/></svg></button>` : "";
-      return `<li class="loc-card">${remove}
+      const swipe = e.kind === "saved" && !state.editing;
+      const del = swipe ? `<button class="swipe-del" type="button" data-remove="${esc(e.id)}" tabindex="-1" aria-label="${esc(T.remove(s.name))}"><span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.8h5V7M6.5 7l.9 12.2h9.2L17.5 7M10 10.5v6M14 10.5v6"/></svg>${T.delete}</span></button>` : "";
+      return `<li class="loc-card${swipe ? " swipeable" : ""}" data-id="${esc(e.id || "")}">${remove}${del}
         <button class="loc-open sky ${sky}${night}" type="button" data-open="${i}">
           <span class="nm">${esc(name)}</span><span class="sub">${sub}</span>
           <span class="val">${s ? s.api : "--"}</span>
@@ -462,6 +465,7 @@
   }
   function showList(show) {
     if (!show) state.editing = false;
+    openRow = null;
     renderList();
     document.body.classList.toggle("list-open", show);
     setView($("listView"), show);
@@ -538,11 +542,82 @@
     window.JerebuMap?.close();
   }
 
+  /* ---------- Swipe left to delete (locations list) ---------- */
+  const OPEN_X = -92;
+  let sw = null, openRow = null, swipeEndedAt = 0;
+  function closeRow(li) {
+    if (!li) return;
+    li.classList.remove("open");
+    li.querySelector(".loc-open").style.transform = "";
+    setTimeout(() => { if (!li.classList.contains("open")) li.classList.remove("swiping"); }, 320);
+    if (openRow === li) openRow = null;
+  }
+  function animateRemove(li, id) {
+    const card = li.querySelector(".loc-open");
+    li.style.height = li.offsetHeight + "px";
+    if (card) card.style.transform = `translateX(${-li.offsetWidth}px)`;
+    requestAnimationFrame(() => { li.classList.add("removing"); li.style.height = "0px"; });
+    setTimeout(() => removeStation(id), 300);
+  }
+  const cards = $("locCards");
+  cards.addEventListener("pointerdown", (e) => {
+    const li = e.target.closest(".loc-card.swipeable");
+    if (openRow && openRow !== li) { closeRow(openRow); swipeEndedAt = Date.now(); }
+    if (!li || e.target.closest(".swipe-del") || (e.pointerType === "mouse" && e.button !== 0)) return;
+    sw = { li, card: li.querySelector(".loc-open"), id: e.pointerId, x0: e.clientX, y0: e.clientY,
+      base: li.classList.contains("open") ? OPEN_X : 0, x: 0, lock: null };
+  });
+  cards.addEventListener("pointermove", (e) => {
+    if (!sw || e.pointerId !== sw.id) return;
+    const dx = e.clientX - sw.x0, dy = e.clientY - sw.y0;
+    if (!sw.lock) {
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+        sw.lock = "x";
+        sw.li.classList.add("swiping", "dragging");
+        try { sw.card.setPointerCapture(e.pointerId); } catch {}
+      } else if (Math.abs(dy) > 8) { sw = null; return; }
+      else return;
+    }
+    let x = sw.base + dx;
+    if (x > 0) x *= 0.25;                                   // resist dragging right
+    sw.x = x;
+    sw.card.style.transform = `translateX(${x}px)`;
+  });
+  function endSwipe(e) {
+    if (!sw || e.pointerId !== sw.id) return;
+    const { li, card, x, lock } = sw;
+    sw = null;
+    if (lock !== "x") return;
+    swipeEndedAt = Date.now();
+    li.classList.remove("dragging");
+    if (x < -li.offsetWidth * 0.5) {                        // full swipe deletes
+      animateRemove(li, li.dataset.id);
+    } else if (x < OPEN_X / 2) {                           // reveal Delete
+      li.classList.add("open");
+      card.style.transform = `translateX(${OPEN_X}px)`;
+      openRow = li;
+    } else closeRow(li);
+  }
+  cards.addEventListener("pointerup", endSwipe);
+  cards.addEventListener("pointercancel", endSwipe);
+  $("listScroll").addEventListener("scroll", () => { if (openRow) closeRow(openRow); }, { passive: true });
+
   /* ---------- Add to Home Screen ---------- */
   let installPrompt = null;
   const isStandalone = () => window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
   const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   function syncInstallBtn() { $("installBtn").hidden = isStandalone(); }
+  // iOS home-screen apps report a viewport short by the status bar; use the
+  // real screen height there so the app reaches the bottom edge.
+  function setAppHeight() {
+    let h = window.innerHeight;
+    if (isStandalone() && isIOS()) {
+      const portrait = window.innerHeight >= window.innerWidth;
+      const full = portrait ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+      h = Math.max(h, full);
+    }
+    document.documentElement.style.setProperty("--app-h", h + "px");
+  }
   async function onInstall() {
     if (installPrompt) {
       installPrompt.prompt();
@@ -607,8 +682,17 @@
     const t = ev.target;
     const lang = t.closest("[data-lang]"); if (lang) return setLang(lang.dataset.lang);
     const go = t.closest("[data-goto]"); if (go) return goTo(+go.dataset.goto, true);
-    const open = t.closest("[data-open]"); if (open && !state.editing) { showList(false); return goTo(+open.dataset.open, false); }
-    const rm = t.closest("[data-remove]"); if (rm) return removeStation(rm.dataset.remove);
+    const open = t.closest("[data-open]");
+    if (open) {
+      if (Date.now() - swipeEndedAt < 350) return;          // that was a swipe, not a tap
+      if (openRow) return closeRow(openRow);
+      if (!state.editing) { showList(false); return goTo(+open.dataset.open, false); }
+    }
+    const rm = t.closest("[data-remove]");
+    if (rm) {
+      const li = rm.closest(".loc-card");
+      return li ? animateRemove(li, rm.dataset.remove) : removeStation(rm.dataset.remove);
+    }
     const add = t.closest("[data-add]"); if (add) return addStation(add.dataset.add);
     const act = t.closest("[data-action]");
     if (act?.dataset.action === "locate") return locate();
@@ -636,7 +720,8 @@
   $("editBtn").addEventListener("click", () => { state.editing = !state.editing; renderList(); });
   $("search").addEventListener("input", (ev) => renderSearch(ev.target.value));
   let rz;
-  window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => goTo(state.page, false), 120); });
+  window.addEventListener("resize", () => { setAppHeight(); clearTimeout(rz); rz = setTimeout(() => goTo(state.page, false), 120); });
+  window.addEventListener("orientationchange", () => setTimeout(setAppHeight, 250));
   document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
 
   /* ---------- start ---------- */
@@ -648,6 +733,7 @@
   T = I18N[state.lang];
   [$("listView"), $("mapView"), sheet, $("installSheet")].forEach((v) => setView(v, false));
   syncInstallBtn();
+  setAppHeight();
   renderChrome();
 
   refresh().then((ok) => { if (ok) locate(); });

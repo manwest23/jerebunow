@@ -1,7 +1,7 @@
 /* JerebuNow service worker: network first, so readings are always fresh when
    online; the last copy is shown when offline. Map tiles are left to the
    browser cache. */
-const CACHE = "jerebunow-v1";
+const CACHE = "jerebunow-v2";
 const SHELL = ["./", "index.html", "style.css", "app.js", "i18n.js", "map.js", "manifest.webmanifest",
   "icons/apple-touch-icon.png", "icons/icon-192.png", "data/api.json"];
 

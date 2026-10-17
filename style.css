@@ -496,7 +496,7 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
   transition: opacity .25s ease, transform .3s cubic-bezier(.2,.8,.2,1);
 }
 .install-btn svg { width: 22px; height: 22px; }
-.sheet.sheet-short { height: auto; padding-top: 8px; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); }
+.sheet.sheet-short { height: auto; max-height: calc(100% - env(safe-area-inset-top, 0px) - 12px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding-top: 8px; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); }
 .install-head { display: flex; align-items: center; gap: 14px; margin: 8px 0 14px; }
 .install-head img { width: 64px; height: 64px; border-radius: 15px; flex: none; box-shadow: 0 2px 10px rgba(0,0,0,.35); }
 .install-head h2 { margin: 0; font-size: 1.1176rem; font-weight: 600; text-wrap: balance; }
@@ -766,3 +766,13 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
 .foot .checked { margin-top: 0 !important; color: var(--ink-2); }
 .foot .checked:empty { display: none; }
 .school .small + .small { margin-top: 8px; }
+
+/* Add to Home Screen: iPhone / Android switch */
+.install-tabs { display: flex; width: 100%; margin: 4px 0 14px; }
+.install-tabs button { flex: 1; padding: 8px 10px; font-size: 0.8824rem; }
+.install-now { width: 100%; padding: 13px; background: #2f88ff; border: 0; color: #fff; margin-bottom: 4px; }
+.install-or { margin: 10px 0 8px; font-size: 0.8235rem; color: var(--ink-3); }
+@media (prefers-color-scheme: light) {
+  .sheet-wrap .seg { background: rgba(118,118,128,.14); }
+  .sheet-wrap .seg button[aria-pressed="true"] { background: #fff; color: #111318; }
+}

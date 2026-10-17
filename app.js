@@ -917,6 +917,7 @@
     state.lang = lang; T = I18N[lang];
     store.set(LANG_KEY, lang);
     render(true);
+    if ($("installSheet").classList.contains("open")) renderInstall();
     syncAlertsBtn(); syncAlertsLang();
     if (window.JerebuMap?.isOpen()) window.JerebuMap.update(mapContext());
   }
@@ -1235,21 +1236,44 @@
   const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   function syncInstallBtn() { $("installBtn").hidden = isStandalone(); }
 
-  async function onInstall() {
-    if (installPrompt) {
-      installPrompt.prompt();
-      const choice = await installPrompt.userChoice.catch(() => null);
-      installPrompt = null;
-      if (choice?.outcome === "accepted") $("installBtn").hidden = true;
-      return;
-    }
-    const ios = isIOS();
+  const isAndroid = () => /android/i.test(navigator.userAgent);
+  const isSamsung = () => /SamsungBrowser/i.test(navigator.userAgent);
+  let installOS = null;
+  // The guide opens on the phone you're using; the switch shows the other one
+  function renderInstall() {
+    const os = installOS || (isIOS() ? "ios" : "android");
     $("installTitle").textContent = T.installTitle;
     $("installSub").textContent = T.installSub;
-    $("installSteps").innerHTML = (ios ? T.installIOS : T.installOther).map((s) => `<li><span>${s}</span></li>`).join("")
-      + (ios ? `<li class="note">${T.installIOSNote}</li>` : "");
+    const tabs = $("installTabs");
+    tabs.setAttribute("aria-label", T.installTitle);
+    tabs.querySelector('[data-os="ios"]').textContent = T.tabIphone;
+    tabs.querySelector('[data-os="android"]').textContent = T.tabAndroid;
+    tabs.querySelectorAll("[data-os]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.os === os)));
+    // One-tap install where the browser offers it (Chrome on Android and computers)
+    const canPrompt = !!installPrompt && os === "android";
+    $("installNow").hidden = !canPrompt;
+    $("installNow").textContent = T.installNow;
+    $("installOr").hidden = !canPrompt;
+    $("installOr").textContent = T.installNowNote;
+    let steps, note;
+    if (os === "ios") { steps = T.installIOS; note = T.installIOSNote; }
+    else if (isSamsung()) { steps = T.installSamsung; note = ""; }
+    else { steps = T.installAndroid; note = T.installAndroidNote; }
+    $("installSteps").innerHTML = steps.map((s) => `<li><span>${s}</span></li>`).join("") + (note ? `<li class="note">${note}</li>` : "");
     $("installDone").textContent = T.installOk;
+  }
+  function onInstall() {
+    installOS = null;
+    renderInstall();
     setView($("installSheet"), true);
+  }
+  async function installNow() {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const choice = await installPrompt.userChoice.catch(() => null);
+    installPrompt = null;
+    if (choice?.outcome === "accepted") { $("installBtn").hidden = true; closeInstall(); }
+    else renderInstall();
   }
   const closeInstall = () => setView($("installSheet"), false);
   window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installPrompt = e; syncInstallBtn(); });
@@ -1345,6 +1369,8 @@
   });
   $("mapBtn").addEventListener("click", openMap);
   $("installBtn").addEventListener("click", onInstall);
+  $("installNow").addEventListener("click", installNow);
+  $("installTabs").addEventListener("click", (e) => { const b = e.target.closest("[data-os]"); if (b) { installOS = b.dataset.os; renderInstall(); } });
   $("alertsBtn").addEventListener("click", openAlerts);
   $("alertsForm").addEventListener("submit", saveAlerts);
   $("alertsOff").addEventListener("click", turnOffAlerts);

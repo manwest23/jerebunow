@@ -137,6 +137,20 @@ window.JEREBU_I18N = {
       "Tap <b>Install app</b> or <b>Add to Home screen</b>.",
       "Confirm to add it."
     ],
+    installAndroid: [
+      "In Chrome, tap the menu <b>⋮</b> at the top right.",
+      "Tap <b>Install app</b>. On some phones it's called <b>Add to Home screen</b>, then tap <b>Install</b>.",
+      "Tap <b>Install</b> to confirm. JerebuNow appears on your Home screen and in your app list."
+    ],
+    installAndroidNote: "Using another browser? Open this page in Chrome.",
+    installSamsung: [
+      "In Samsung Internet, tap the menu <b>☰</b> at the bottom right.",
+      "Tap <b>Add page to</b>, then <b>Home screen</b>.",
+      "Tap <b>Add</b>. JerebuNow appears on your Home screen."
+    ],
+    installNow: "Install JerebuNow",
+    installNowNote: "Or add it yourself:",
+    tabIphone: "iPhone", tabAndroid: "Android",
     installOk: "OK",
 
     // IQAir (worldwide, US AQI)
@@ -386,6 +400,20 @@ window.JEREBU_I18N = {
       "Ketik <b>Pasang aplikasi</b> atau <b>Tambah ke skrin utama</b>.",
       "Sahkan untuk menambah."
     ],
+    installAndroid: [
+      "Dalam Chrome, ketik menu <b>⋮</b> di penjuru kanan atas.",
+      "Ketik <b>Pasang apl</b> (Install app). Pada sesetengah telefon, ia dipanggil <b>Tambah ke skrin Utama</b> (Add to Home screen), kemudian ketik <b>Pasang</b>.",
+      "Ketik <b>Pasang</b> untuk mengesahkan. JerebuNow akan muncul di Skrin Utama dan senarai apl anda."
+    ],
+    installAndroidNote: "Menggunakan pelayar lain? Buka halaman ini dalam Chrome.",
+    installSamsung: [
+      "Dalam Samsung Internet, ketik menu <b>☰</b> di penjuru kanan bawah.",
+      "Ketik <b>Tambah halaman ke</b> (Add page to), kemudian <b>Skrin Utama</b> (Home screen).",
+      "Ketik <b>Tambah</b>. JerebuNow akan muncul di Skrin Utama anda."
+    ],
+    installNow: "Pasang JerebuNow",
+    installNowNote: "Atau tambah sendiri:",
+    tabIphone: "iPhone", tabAndroid: "Android",
     installOk: "Faham",
 
     usAqi: "AQI AS",

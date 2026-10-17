@@ -26,7 +26,7 @@ jobs:
         run: |
           git config user.name "haze-bot"
           git config user.email "haze-bot@users.noreply.github.com"
-          git add data/api.json
+          git add data/api.json data/history.json
           git diff --cached --quiet && exit 0
           git commit -m "Update JerebuNow data"
           git pull --rebase origin main

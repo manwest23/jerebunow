@@ -624,3 +624,102 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
 .map-card .mc-txt span + span { font-size: 13px; color: var(--ink-3); }
 .mk.iq.sel b { background: #fff; color: #111; }
 .mk.iq:not(.dot) em { display: block; }    /* the few IQAir cities are always named */
+
+/* ---------- Screen-reader only ---------- */
+.sr { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ---------- Share button (hero) ---------- */
+.share-btn {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 12px;
+  padding: 7px 14px; border-radius: 999px; border: 0; cursor: pointer;
+  background: rgba(255,255,255,.14); font-size: 14px; font-weight: 600;
+}
+.share-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.share-btn:active { transform: scale(.96); }
+
+/* ---------- Your places at a glance ---------- */
+.glance { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: -4px -2px 0; padding: 2px; }
+.glance::-webkit-scrollbar { display: none; }
+.gl {
+  flex: none; display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  padding: 8px 12px; border-radius: 999px; border: 0;
+  background: rgba(255,255,255,.13); box-shadow: inset 0 0 0 .5px var(--glass-line); font-size: 14px;
+}
+.gl i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.gl b { font-variant-numeric: tabular-nums; }
+
+/* ---------- What to do ---------- */
+.todo { margin: 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+.todo li { position: relative; padding-left: 20px; font-size: 15px; line-height: 1.45; }
+.todo li::before { content: ""; position: absolute; left: 2px; top: .55em; width: 7px; height: 7px; border-radius: 50%; background: var(--ink-2); }
+.school { margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: rgba(0,0,0,.16); }
+.school p { margin: 0; font-size: 14px; }
+.school .small { margin-top: 6px; }
+.school.met { background: rgba(229,68,58,.22); box-shadow: inset 0 0 0 1px rgba(229,68,58,.5); }
+.school.met p:first-child { font-weight: 600; }
+
+/* ---------- Best time to run ---------- */
+.bw { margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--sep); }
+.bw p { margin: 0; }
+.bw-head { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+.bw-pick { font-size: 18px; font-weight: 600; margin-top: 4px !important; }
+.bw-none { font-size: 15px; margin-top: 4px !important; }
+.bw-why { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px !important; }
+.bw-why span { font-size: 12px; padding: 4px 9px; border-radius: 999px; background: rgba(255,255,255,.12); }
+.bw-sun { font-size: 13px; color: var(--ink-2); margin-top: 8px !important; }
+.bw-note { font-size: 12px; color: var(--ink-3); margin-top: 6px !important; }
+
+/* ---------- Week chart ---------- */
+.week { display: flex; justify-content: space-between; gap: 4px; }
+.wk { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.wk .v { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.wk .bar { width: 10px; height: 80px; border-radius: 5px; background: rgba(255,255,255,.12); position: relative; overflow: hidden; }
+.wk .bar i { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 5px; }
+.wk .t { font-size: 13px; color: var(--ink-2); white-space: nowrap; }
+
+/* ---------- Footer privacy ---------- */
+.foot .privacy { max-width: 46ch; margin: 10px auto 0 !important; line-height: 1.45; }
+
+/* ---------- Pull to refresh ---------- */
+.ptr {
+  position: absolute; z-index: 2; top: calc(env(safe-area-inset-top, 0px) + 10px); left: 50%;
+  width: 34px; height: 34px; margin-left: -17px; border-radius: 50%;
+  display: grid; place-items: center; pointer-events: none;
+  background: rgba(20,24,32,.45);
+  opacity: var(--pull, 0); transform: translateY(calc(var(--pull, 0) * 26px)) rotate(calc(var(--pull, 0) * 270deg));
+}
+.ptr i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,.85); border-right-color: transparent; }
+.ptr.ready i { border-color: #fff; border-right-color: transparent; }
+.ptr.spin { opacity: 1; transform: translateY(26px); }
+.ptr.spin i { animation: spin .8s linear infinite; }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: absolute; z-index: 40; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 14px);
+  transform: translate(-50%, -12px); opacity: 0; pointer-events: none;
+  padding: 10px 18px; border-radius: 999px; font-size: 14px; font-weight: 600;
+  background: rgba(30,34,44,.92); color: #fff; box-shadow: 0 6px 20px rgba(0,0,0,.3);
+  transition: opacity .25s ease, transform .3s cubic-bezier(.2,.8,.2,1);
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Light mode for the list, sheets and map chrome ----------
+   Location pages keep their sky colours in both modes, like Apple Weather. */
+@media (prefers-color-scheme: light) {
+  :root { --list-bg: #f2f2f7; --sheet: rgba(246,246,250,.96); }
+  .listview, .sheet-wrap {
+    color-scheme: light;
+    --ink: #111318; --ink-2: rgba(17,19,24,.72); --ink-3: rgba(17,19,24,.5);
+    --sep: rgba(17,19,24,.12); --glass-line: rgba(17,19,24,.1);
+    color: var(--ink);
+  }
+  .listview .loc-open { --ink: #fff; --ink-2: rgba(255,255,255,.82); color: #fff; }
+  .listview .more-btn { background: rgba(17,19,24,.06); }
+  .listview .searchbar { background: rgba(255,255,255,.85); box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+  .listview .seg { background: rgba(118,118,128,.14); }
+  .listview .seg button[aria-pressed="true"] { background: #fff; color: #111318; }
+  .sheet .search { background: rgba(118,118,128,.14); }
+  .install-steps li { background: rgba(17,19,24,.05); }
+  .sheet-backdrop { background: rgba(0,0,0,.25); }
+}
+.map-legend .k-fire { background: radial-gradient(circle, #ff6a1a 0 35%, rgba(255,122,26,.35) 40% 100%); }

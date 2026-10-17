@@ -107,8 +107,10 @@ window.JerebuMap = (() => {
     el.me.hidden = !ctx.coords;
     el.legend.querySelector("h3").textContent = t.mapTitle;
     el.legend.querySelector("ul").innerHTML = ctx.bands.slice().reverse().map((b) => `<li>${ctx.bandLabel(b)}</li>`).join("");
+    const fireCount = (ctx.fires && ctx.fires.count) || 0;
     el.legend.querySelector(".lg-src").innerHTML = `<span><i class="k-doe"></i>${t.legendDoe}</span>` +
-      ((ctx.world || []).length ? `<span><i class="k-iq"></i>${t.legendIQ}</span>` : "");
+      ((ctx.world || []).length ? `<span><i class="k-iq"></i>${t.legendIQ}</span>` : "") +
+      (fireCount ? `<span><i class="k-fire"></i>${t.legendFires(fireCount)}</span>` : "");
     el.title.textContent = t.timelineTitle;
     el.range.setAttribute("aria-label", t.last24);
     root.setAttribute("aria-label", t.openMap);
@@ -354,6 +356,15 @@ window.JerebuMap = (() => {
         });
         map.addLayer({ id: "api", type: "raster", source: "api",
           paint: { "raster-opacity": 0.9, "raster-saturation": 0.25, "raster-resampling": "linear", "raster-fade-duration": 0 } }, before);
+        // NASA FIRMS fire hotspots (24 h), as soft glowing points over the colour layer
+        map.addSource("fires", { type: "geojson", data: firesGeoJSON() });
+        map.addLayer({ id: "fires-glow", type: "circle", source: "fires", paint: {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, ["min", 9, ["+", 3, ["*", 0.6, ["get", "n"]]]], 9, ["min", 22, ["+", 8, ["*", 1.2, ["get", "n"]]]]],
+          "circle-color": "#ff7a1a", "circle-opacity": 0.22, "circle-blur": 0.9 } }, before);
+        map.addLayer({ id: "fires", type: "circle", source: "fires", paint: {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 1.6, 9, 4],
+          "circle-color": ["interpolate", ["linear"], ["get", "frp"], 0, "#ffb347", 80, "#ff6a1a", 400, "#ff2d1a"],
+          "circle-opacity": 0.95 } }, before);
         syncMarkers(); syncMe(); declutter();
       });
       map.on("error", (e) => { if (!map.loaded() && String(e?.error?.message || "").match(/style|fetch/i)) el.status.textContent = ctx.t.mapError; });
@@ -371,10 +382,16 @@ window.JerebuMap = (() => {
     const l = layers.find((x) => x.type === "symbol");
     return l ? l.id : undefined;
   }
+  function firesGeoJSON() {
+    const pts = (ctx.fires && ctx.fires.points) || [];
+    return { type: "FeatureCollection", features: pts.map((p) => ({ type: "Feature", properties: { n: p.n, frp: p.frp }, geometry: { type: "Point", coordinates: [p.lon, p.lat] } })) };
+  }
   function update(context) {
     ctx = context;
     if (!built) return;
     labels();
+    const fs = map && map.getSource && map.getSource("fires");
+    if (fs) fs.setData(firesGeoJSON());
     const atNow = step === steps - 1;
     setupTimeline();
     setStep(atNow ? steps - 1 : Math.min(step, steps - 1), !map);

@@ -59,7 +59,8 @@ window.JerebuIQ = (() => {
     const job = (async () => {
       try {
         await slot();
-        const res = await fetch(`${API}?lat=${lat}&lon=${lon}&key=${encodeURIComponent(KEY)}`);
+        // Send coordinates rounded to ~1 km, never the exact position
+        const res = await fetch(`${API}?lat=${lat.toFixed(2)}&lon=${lon.toFixed(2)}&key=${encodeURIComponent(KEY)}`);
         const body = await res.json().catch(() => null);
         if (body && body.status === "success" && body.data) {
           const s = normalise(body.data, lat, lon);

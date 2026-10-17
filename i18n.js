@@ -110,6 +110,7 @@ window.JEREBU_I18N = {
     mapLegend: "API",
     legendDoe: "DOE · API",
     legendIQ: "IQAir · US AQI",
+    legendFires: (n) => `Fire hotspots, 24 h (${n.toLocaleString("en-MY")})`,
     close: "Close",
     showMyLocation: "Show my location",
     timelineTitle: "Air quality",
@@ -178,7 +179,75 @@ window.JEREBU_I18N = {
     worldSection: "Around the world · IQAir",
     searching: "Searching…",
     worldNone: "No places found.",
-    worldFail: "World search isn't available right now."
+    worldFail: "World search isn't available right now.",
+
+    // Best time to run
+    bestTimeHead: "Best time to run",
+    slotMorning: "Morning", slotEvening: "Evening",
+    slotToday: "today", slotTomorrow: "tomorrow",
+    bestPick: (slot, day, from, to) => `${day === "today" ? "This" : "Tomorrow"} ${slot.toLowerCase()}, ${from}–${to}`,
+    whyDry: "dry", whyCool: "cooler", whyAirYest: (v, u) => `${u} ${v} at this time yesterday`,
+    whyAirNow: (v, u) => `${u} ${v} now`,
+    noWindowAir: "No good window: the air has stayed unhealthy. Run indoors today.",
+    noWindowWet: "No dry window in the next day or so. Run indoors or between showers.",
+    bestNote: "DOE doesn't forecast haze, so this uses MET's weather forecast and yesterday's readings.",
+    sunrise: "Sunrise", sunset: "Sunset",
+
+    // What to do
+    whatToDo: "What to do",
+    todo: {
+      good: ["No special precautions.", "Good day for outdoor exercise."],
+      moderate: ["Most people don't need a mask.", "If you have asthma or heart or lung disease, keep your inhaler or medicine with you."],
+      unhealthy: ["Outdoors, wear a well-fitting N95 or KN95 mask. Surgical and cloth masks don't filter haze well.", "Close windows and doors. Run an air purifier with a HEPA filter, or set the air-con to recirculate.", "Drink plenty of water."],
+      very: ["Stay indoors as much as you can, with windows closed.", "If you must go out, wear an N95 or KN95 mask.", "Get medical help for chest pain, breathlessness or wheezing."],
+      hazard: ["Stay indoors with windows closed and a purifier running if you have one.", "Follow instructions from NADMA, DOE and your state authorities.", "Get medical help straight away if you feel unwell."]
+    },
+    schoolRule: "KPM closes schools where the API is above 180, or above 150 for three days in a row.",
+    schoolNow: "This station is above 180. The closure rule may apply here, so check your school's announcement.",
+    school3: "This station has been above 150 on each of the last 3 days. The closure rule may apply here.",
+    schoolNo: "The closure rule is not met at this station right now.",
+
+    // Week chart
+    weekHead: "Past 7 days",
+    weekNote: "Daily highest reading. History builds up over the week.",
+    weekMax: (v) => `Highest ${v}`,
+
+    // Share
+    share: "Share",
+    shareText: (name, v, u, label) => `${name}: ${u} ${v} (${label}) on JerebuNow`,
+    shareCopied: "Copied to clipboard",
+    shareSaved: "Image saved",
+
+    // Glance, refresh, privacy, accessibility
+    yourPlaces: "Your places",
+    refreshed: "Updated",
+    upToDate: "Already up to date",
+    pullToRefresh: "Pull to refresh",
+    privacy: "Your location stays on your phone. It is only sent to IQAir, rounded to about 1 km, when you're outside DOE coverage.",
+    srReading: (v, u, label) => `${u} ${v}, ${label}`,
+
+    // Alerts
+    alerts: "Alerts",
+    alertsTitle: "Haze alerts",
+    alertsSub: "Get a notification when the air changes at a place you choose.",
+    alertsPlace: "Place",
+    alertsRules: "Tell me when",
+    ruleAbove100: "Air becomes unhealthy (above 100)",
+    ruleAbove200: "Air becomes very unhealthy (above 200)",
+    ruleRunOk: "It's good to run again (back to 100 or below)",
+    ruleSchool: "The school closure level is reached (above 180)",
+    alertsOn: "Turn on alerts",
+    alertsSave: "Save",
+    alertsOff: "Turn off alerts",
+    alertsEnabled: "Alerts are on",
+    alertsDisabled: "Alerts are off",
+    alertsNeedHome: "On iPhone, alerts only work after you add JerebuNow to your Home Screen and open it from there.",
+    alertsDenied: "Notifications are blocked. Allow them for JerebuNow in your phone's Settings, then try again.",
+    alertsNotSetup: "Alerts aren't available on this site yet.",
+    alertsFail: "Couldn't turn on alerts. Check your connection and try again.",
+    alertsUnsupported: "This browser doesn't support notifications.",
+    alertsQuiet: "Alerts are checked every hour. You'll get at most one per change.",
+    myLocationStation: (n) => `My Location (${n})`
   },
 
   ms: {
@@ -285,6 +354,7 @@ window.JEREBU_I18N = {
     mapLegend: "IPU",
     legendDoe: "JAS · IPU",
     legendIQ: "IQAir · AQI AS",
+    legendFires: (n) => `Titik panas, 24 jam (${n.toLocaleString("ms-MY")})`,
     close: "Tutup",
     showMyLocation: "Tunjuk lokasi saya",
     timelineTitle: "Kualiti udara",
@@ -351,6 +421,68 @@ window.JEREBU_I18N = {
     worldSection: "Seluruh dunia · IQAir",
     searching: "Mencari…",
     worldNone: "Tiada tempat ditemui.",
-    worldFail: "Carian seluruh dunia tidak tersedia buat masa ini."
+    worldFail: "Carian seluruh dunia tidak tersedia buat masa ini.",
+
+    bestTimeHead: "Masa terbaik untuk berlari",
+    slotMorning: "Pagi", slotEvening: "Petang",
+    slotToday: "ini", slotTomorrow: "esok",
+    bestPick: (slot, day, from, to) => `${slot} ${day}, ${from}–${to}`,
+    whyDry: "kering", whyCool: "lebih sejuk", whyAirYest: (v, u) => `${u} ${v} pada waktu ini semalam`,
+    whyAirNow: (v, u) => `${u} ${v} sekarang`,
+    noWindowAir: "Tiada waktu yang sesuai: udara masih tidak sihat. Lari di dalam bangunan hari ini.",
+    noWindowWet: "Tiada waktu kering dalam sehari dua ini. Lari di dalam bangunan atau ketika hujan berhenti.",
+    bestNote: "JAS tidak meramal jerebu, jadi ini menggunakan ramalan cuaca MET dan bacaan semalam.",
+    sunrise: "Matahari terbit", sunset: "Matahari terbenam",
+
+    whatToDo: "Apa yang perlu dibuat",
+    todo: {
+      good: ["Tiada langkah berjaga-jaga khas.", "Hari yang baik untuk bersenam di luar."],
+      moderate: ["Kebanyakan orang tidak perlu memakai pelitup.", "Jika anda ada asma atau penyakit jantung atau paru-paru, bawa inhaler atau ubat anda."],
+      unhealthy: ["Di luar, pakai pelitup N95 atau KN95 yang muat. Pelitup pembedahan dan kain kurang berkesan menapis jerebu.", "Tutup tingkap dan pintu. Gunakan penapis udara HEPA, atau tetapkan penghawa dingin kepada edaran semula.", "Minum banyak air."],
+      very: ["Kekal di dalam rumah sebanyak mungkin, dengan tingkap ditutup.", "Jika perlu keluar, pakai pelitup N95 atau KN95.", "Dapatkan rawatan jika sakit dada, sesak nafas atau berdehit."],
+      hazard: ["Kekal di dalam rumah dengan tingkap ditutup dan penapis udara dihidupkan jika ada.", "Ikut arahan NADMA, JAS dan pihak berkuasa negeri.", "Dapatkan rawatan segera jika berasa tidak sihat."]
+    },
+    schoolRule: "KPM menutup sekolah di kawasan yang IPU melebihi 180, atau melebihi 150 selama tiga hari berturut-turut.",
+    schoolNow: "Stesen ini melebihi 180. Peraturan penutupan mungkin terpakai di sini, jadi semak makluman sekolah anda.",
+    school3: "Stesen ini melebihi 150 pada setiap hari dalam 3 hari lalu. Peraturan penutupan mungkin terpakai di sini.",
+    schoolNo: "Peraturan penutupan belum dicapai di stesen ini.",
+
+    weekHead: "7 hari lalu",
+    weekNote: "Bacaan tertinggi setiap hari. Sejarah bertambah sepanjang minggu.",
+    weekMax: (v) => `Tertinggi ${v}`,
+
+    share: "Kongsi",
+    shareText: (name, v, u, label) => `${name}: ${u} ${v} (${label}) di JerebuNow`,
+    shareCopied: "Disalin ke papan klip",
+    shareSaved: "Imej disimpan",
+
+    yourPlaces: "Tempat anda",
+    refreshed: "Dikemas kini",
+    upToDate: "Sudah terkini",
+    pullToRefresh: "Tarik untuk muat semula",
+    privacy: "Lokasi anda kekal dalam telefon anda. Ia hanya dihantar kepada IQAir, dibundarkan kira-kira 1 km, apabila anda di luar liputan JAS.",
+    srReading: (v, u, label) => `${u} ${v}, ${label}`,
+
+    alerts: "Amaran",
+    alertsTitle: "Amaran jerebu",
+    alertsSub: "Terima pemberitahuan apabila kualiti udara berubah di tempat pilihan anda.",
+    alertsPlace: "Tempat",
+    alertsRules: "Beritahu saya apabila",
+    ruleAbove100: "Udara menjadi tidak sihat (melebihi 100)",
+    ruleAbove200: "Udara menjadi sangat tidak sihat (melebihi 200)",
+    ruleRunOk: "Sesuai untuk berlari semula (kembali 100 atau ke bawah)",
+    ruleSchool: "Paras penutupan sekolah dicapai (melebihi 180)",
+    alertsOn: "Hidupkan amaran",
+    alertsSave: "Simpan",
+    alertsOff: "Matikan amaran",
+    alertsEnabled: "Amaran dihidupkan",
+    alertsDisabled: "Amaran dimatikan",
+    alertsNeedHome: "Di iPhone, amaran hanya berfungsi selepas anda menambah JerebuNow ke Skrin Utama dan membukanya dari situ.",
+    alertsDenied: "Pemberitahuan disekat. Benarkannya untuk JerebuNow dalam Tetapan telefon, kemudian cuba lagi.",
+    alertsNotSetup: "Amaran belum tersedia di laman ini.",
+    alertsFail: "Amaran tidak dapat dihidupkan. Semak sambungan anda dan cuba lagi.",
+    alertsUnsupported: "Pelayar ini tidak menyokong pemberitahuan.",
+    alertsQuiet: "Amaran disemak setiap jam. Anda menerima paling banyak satu bagi setiap perubahan.",
+    myLocationStation: (n) => `Lokasi Saya (${n})`
   }
 };

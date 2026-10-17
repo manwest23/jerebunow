@@ -220,6 +220,29 @@ async function main() {
   await mkdir(new URL("../data/", import.meta.url), { recursive: true });
   await writeFile(OUT, JSON.stringify(out, null, 2));
   console.log(`Wrote ${stations.length} stations at ${out.updated}`);
+  await writeWeekHistory(stations);
+}
+
+// 7 days of hourly readings per station, keyed by the reading's hour, in
+// data/history.json (loaded only when a page shows the week chart).
+async function writeWeekHistory(stations) {
+  const HIST = new URL("../data/history.json", import.meta.url);
+  let h = { stations: {} };
+  try { h = JSON.parse(await readFile(HIST, "utf8")); } catch {}
+  const cutoff = Date.now() - 7 * 24 * 3600 * 1000;
+  for (const s of stations) {
+    if (s.api == null) continue;
+    const hour = s.readingTime ? String(s.readingTime).slice(0, 13) : new Date().toISOString().slice(0, 13);
+    const rows = (h.stations[s.id] || []).filter((r) => r[0] !== hour);
+    rows.push([hour, s.api]);
+    h.stations[s.id] = rows
+      .filter((r) => new Date(r[0] + ":00:00" + (/[zZ+]/.test(r[0]) ? "" : "+08:00")) >= cutoff)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .slice(-168);
+  }
+  h.updated = new Date().toISOString();
+  h.tz = "+08:00";                           // DOE reading times are Malaysia time
+  await writeFile(HIST, JSON.stringify(h));
 }
 
 main().catch((e) => { console.error(e.message); process.exit(1); });

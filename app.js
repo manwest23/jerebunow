@@ -9,6 +9,9 @@
 
   const DATA_URL = "data/api.json";
   const WORLD_URL = "data/world.json";        // IQAir city snapshot, refreshed every 3 h
+  const HISTORY_URL = "data/history.json";    // 7 days of DOE readings
+  const FIRES_URL = "data/fires.json";        // NASA FIRMS hotspots, 24 h
+  const MY_TZ = "Asia/Kuala_Lumpur";
   const REFRESH_MS = 15 * 60 * 1000;
   const SAVED_KEY = "jerebunow.saved";
   const PAGE_KEY = "jerebunow.page";
@@ -49,7 +52,7 @@
   const state = {
     data: null, dataStamp: null, coords: null, locating: true,
     saved: [], page: 0, editing: false, lang: "en",
-    places: {}, iq: {}, iqMe: null, iqStamp: 0, world: []
+    places: {}, iq: {}, iqMe: null, iqStamp: 0, world: [], hist: null, fires: null
   };
   let T = I18N.en;
   const otherLang = () => (state.lang === "en" ? "ms" : "en");
@@ -74,6 +77,20 @@
   const localISO = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const weekday = (iso, style) => new Date(iso + "T00:00:00").toLocaleDateString(T.locale, { weekday: style });
 
+  const fmtTime = (d) => d.toLocaleTimeString(T.locale, { hour: "numeric", minute: "2-digit", timeZone: MY_TZ });
+  // Sunrise and sunset (NOAA approximation, good to a minute or two)
+  function sunTimes(date, lat, lon) {
+    const rad = Math.PI / 180;
+    const y = date.getFullYear(), m = date.getMonth(), dd = date.getDate();
+    const doy = Math.round((Date.UTC(y, m, dd) - Date.UTC(y, 0, 0)) / 864e5);
+    const g = (2 * Math.PI / 365) * (doy - 1);
+    const eqt = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+    const decl = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+    const ha = Math.acos(Math.cos(90.833 * rad) / (Math.cos(lat * rad) * Math.cos(decl)) - Math.tan(lat * rad) * Math.tan(decl)) / rad;
+    const base = Date.UTC(y, m, dd);
+    return { rise: new Date(base + (720 - 4 * (lon + ha) - eqt) * 6e4), set: new Date(base + (720 - 4 * (lon - ha) - eqt) * 6e4) };
+  }
+
   function timeAgo(iso) {
     const t = new Date(iso);
     if (isNaN(t)) return "";
@@ -91,7 +108,9 @@
     clock: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.5V8l2.5 1.5"/></svg>',
     cal: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="12" rx="2"/><path d="M1.5 6.5h13M5 1v3M11 1v3"/></svg>',
     pol: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5" cy="9" r="2.5"/><circle cx="11" cy="6" r="3"/><circle cx="10" cy="12.5" r="1.5"/></svg>',
-    trend: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 12 6 7.5l3 3 5.5-6"/><path d="M10.5 4.5h4v4"/></svg>'
+    trend: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 12 6 7.5l3 3 5.5-6"/><path d="M10.5 4.5h4v4"/></svg>',
+    check: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="3"/><path d="m5 8.2 2 2L11 6"/></svg>',
+    share: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5v10M6.5 6 10 2.5 13.5 6"/><path d="M6 9H4.5v8.5h11V9H14"/></svg>'
   };
 
   /* ---------- weather (MET Malaysia text is in Bahasa Melayu) ---------- */
@@ -146,6 +165,18 @@
       // Only use readings from the last 6 hours
       state.world = (w.places || []).filter((p) => Number.isFinite(p.api) &&
         (!p.readingTime || Date.now() - new Date(p.readingTime) < 6 * 3600000));
+    } catch { /* optional */ }
+  }
+  async function loadHistory() {
+    try {
+      const res = await fetch(HISTORY_URL + "?t=" + Date.now(), { cache: "no-store" });
+      if (res.ok) { state.hist = await res.json(); state.iqStamp++; }
+    } catch { /* optional */ }
+  }
+  async function loadFires() {
+    try {
+      const res = await fetch(FIRES_URL + "?t=" + Date.now(), { cache: "no-store" });
+      if (res.ok) state.fires = await res.json();
     } catch { /* optional */ }
   }
   // A snapshot city within 12 km of a point, so adding it needs no API call
@@ -295,6 +326,50 @@
       <p class="run-best">${esc(best)}</p>
     </section>`;
   }
+  // Best window in the next ~36 h: dry per MET, after sunrise or before sunset
+  // (cooler), and the air was clean at that clock hour on the latest day we have.
+  function bestWindow(s) {
+    const fc = forecastFor(s);
+    if (!fc) return null;
+    const now = new Date(), ti = todayIndex(fc.days);
+    const h = s.history || [];
+    const base = new Date(s.readingTime || state.data.updated);
+    const airAt = (t) => {                                   // same clock hour, most recent past day
+      let ref = t.getTime();
+      while (ref > base.getTime() + 30 * 6e4) ref -= 864e5;
+      const ago = Math.round((base.getTime() - ref) / 36e5);
+      return ago >= 0 && ago < h.length ? h[h.length - 1 - ago] : null;
+    };
+    const slots = [];
+    for (let off = 0; off < 2; off++) {
+      const day = fc.days[ti + off];
+      if (!day) continue;
+      const { rise, set } = sunTimes(new Date(now.getTime() + off * 864e5), s.lat, s.lon);
+      slots.push({ kind: "m", off, from: new Date(rise.getTime() + 10 * 6e4), to: new Date(rise.getTime() + 85 * 6e4), dry: isDry(day.morning), rise, set });
+      slots.push({ kind: "e", off, from: new Date(set.getTime() - 85 * 6e4), to: new Date(set.getTime() - 5 * 6e4), dry: isDry(day.afternoon) && isDry(day.night), rise, set });
+    }
+    const future = slots.filter((sl) => sl.to > now);
+    future.forEach((sl) => { sl.air = airAt(sl.from); sl.est = sl.air ?? s.api; });
+    const good = future.find((sl) => sl.dry && sl.est <= 100 && s.api <= 150);
+    const today = slots[0];
+    if (good) return { slot: good, today };
+    const anyClean = future.some((sl) => sl.est <= 100 && s.api <= 150);
+    return { none: anyClean ? T.noWindowWet : T.noWindowAir, today };
+  }
+  function bestWindowHTML(s) {
+    if (isIQ(s)) return "";
+    const b = bestWindow(s);
+    if (!b) return "";
+    const sun = b.today ? `<p class="bw-sun">${T.sunrise} ${fmtTime(b.today.rise)} · ${T.sunset} ${fmtTime(b.today.set)}</p>` : "";
+    if (b.none) return `<div class="bw"><p class="bw-head">${T.bestTimeHead}</p><p class="bw-none">${esc(b.none)}</p>${sun}</div>`;
+    const sl = b.slot;
+    const why = [T.whyDry, T.whyCool, sl.air != null ? T.whyAirYest(sl.air, T.api) : T.whyAirNow(s.api, T.api)];
+    return `<div class="bw"><p class="bw-head">${T.bestTimeHead}</p>
+      <p class="bw-pick">${esc(T.bestPick(sl.kind === "m" ? T.slotMorning : T.slotEvening, sl.off ? T.slotTomorrow : T.slotToday, fmtTime(sl.from), fmtTime(sl.to)))}</p>
+      <p class="bw-why">${why.map((w) => `<span>${esc(w)}</span>`).join("")}</p>${sun}
+      <p class="bw-note">${T.bestNote}</p></div>`;
+  }
+
   function runCard(s) {
     if (isIQ(s)) return runCardIQ(s);
     const fc = forecastFor(s);
@@ -317,6 +392,7 @@
       <ul class="run-factors">${factors.map((f) =>
         `<li><span class="k">${f.k}</span><span class="v"><i style="background:${DOT[f.level]}"></i>${esc(f.text)}</span></li>`).join("")}</ul>
       <p class="run-best">${esc(best)}</p>
+      ${bestWindowHTML(s)}
     </section>`;
   }
 
@@ -332,6 +408,58 @@
       ${scaleHTML(band)}
     </section>`;
   }
+  const TODO_KEY = { good: "good", moderate: "moderate", usg: "unhealthy", unhealthy: "unhealthy", very: "very", hazard: "hazard", hazardous: "hazard" };
+  function dailyMax(id) {
+    const rows = state.hist?.stations?.[id] || [];
+    const days = new Map();
+    for (const [hour, v] of rows) { const d = hour.slice(0, 10); days.set(d, Math.max(days.get(d) ?? 0, v)); }
+    return [...days.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  }
+  function schoolStatus(s) {
+    if (s.api > 180) return { met: true, text: T.schoolNow };
+    const days = dailyMax(s.id);
+    const last3 = days.slice(-3);
+    if (last3.length === 3 && last3.every(([, v]) => v > 150)) return { met: true, text: T.school3 };
+    return { met: false, text: T.schoolNo };
+  }
+  function todoCard(s, band) {
+    const tips = T.todo[TODO_KEY[band.key]] || [];
+    const school = !isIQ(s) ? schoolStatus(s) : null;
+    return `<section class="card">
+      <h2 class="card-head">${ICON.check}${T.whatToDo}</h2>
+      <ul class="todo">${tips.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
+      ${school ? `<div class="school${school.met ? " met" : ""}"><p>${esc(school.text)}</p><p class="small">${T.schoolRule}</p></div>` : ""}
+    </section>`;
+  }
+
+  // ---- 7-day chart (DOE) ----
+  function weekCard(s) {
+    if (isIQ(s) || !state.hist) return "";
+    const days = dailyMax(s.id).slice(-7);
+    if (!days.length) return "";
+    const max = Math.max(200, ...days.map(([, v]) => v));
+    const cols = days.map(([d, v], i) => {
+      const label = i === days.length - 1 ? T.today : weekday(d, "short");
+      return `<div class="wk"><span class="v">${v}</span>
+        <span class="bar" aria-hidden="true"><i style="height:${Math.max(6, (v / max) * 100).toFixed(0)}%;background:${bandFor(v).color}"></i></span>
+        <span class="t">${esc(label)}</span></div>`;
+    }).join("");
+    return `<section class="card"><h2 class="card-head">${ICON.cal}${T.weekHead}</h2>
+      <div class="week" role="img" aria-label="${esc(days.map(([d, v]) => `${weekday(d, "long")} ${v}`).join(", "))}">${cols}</div>
+      ${days.length < 7 ? `<p class="small">${T.weekNote}</p>` : ""}</section>`;
+  }
+
+  // ---- your places at a glance (page 1) ----
+  let renderList_ = [];
+  function glanceHTML() {
+    const others = renderList_.map((e, i) => ({ e, i })).filter(({ e }) => e.kind === "saved" && e.s);
+    if (!others.length) return "";
+    return `<div class="glance" aria-label="${T.yourPlaces}">${others.map(({ e, i }) => {
+      const b = bandOf(e.s);
+      return `<button type="button" class="gl" data-goto="${i}"><i style="background:${b.color}"></i><span>${esc(e.s.name)}</span><b>${e.s.api}</b></button>`;
+    }).join("")}</div>`;
+  }
+
   function scaleHTML(band) {
     const set = band.us ? US_BANDS : BANDS, ranges = band.us ? US_RANGES : RANGES;
     const labels = band.us ? T.usBands : T.bands;
@@ -436,6 +564,7 @@
     return `<footer class="foot">
       ${langSwitch()}
       ${src}
+      <p class="privacy">${T.privacy}</p>
       <p class="credit">${T.developedBy} <b>manwest</b></p>
     </footer>`;
   }
@@ -511,19 +640,24 @@
     const meta = [e.kind === "me" ? near : s.state, timeAgo(s.readingTime || state.data.updated),
       e.iqRes && e.iqRes.stale ? T.iqStale : ""].filter(Boolean).join(" · ");
     return `<section class="slide sky sky-${sky}${night}" data-index="${i}" data-band="${sky}" aria-label="${esc(s.name)}">
-      ${fxFor(s, s.id || e.id || s.name)}<div class="page"><div class="page-inner">
+      ${fxFor(s, s.id || e.id || s.name)}<div class="ptr" aria-hidden="true"><i></i></div><div class="page"><div class="page-inner">
         <header class="hero">
           ${tag}
           <p class="hero-name">${esc(s.name)}</p>
-          <p class="hero-api">${s.api}<small>${unitOf(s)}</small></p>
+          <p class="hero-api" aria-hidden="true">${s.api}<small>${unitOf(s)}</small></p>
+          <p class="sr">${esc(T.srReading(s.api, unitOf(s), bandText(band).label))}</p>
           <p class="hero-cat">${bandText(band).label} · <span class="alt">${other}</span></p>
           ${heroWeather(s)}
           <p class="hero-hl">${hiLo(s)}</p>
           <p class="hero-meta">${esc(meta)}</p>
+          <button class="share-btn" type="button" data-share="${i}">${ICON.share}${T.share}</button>
         </header>
+        ${e.kind === "me" ? glanceHTML() : ""}
         ${adviceCard(band)}
+        ${todoCard(s, band)}
         ${runCard(s)}
         ${hoursCard(s)}
+        ${weekCard(s)}
         ${forecastCard(s)}
         ${tiles(s)}
         ${footer(s)}
@@ -542,6 +676,7 @@
     if (force || key !== lastPagesKey) {
       lastPagesKey = key;
       const keep = [...pager.querySelectorAll(".page")].map((p) => p.scrollTop);
+      renderList_ = list;
       pager.innerHTML = list.map(pageHTML).join("");
       const pages = pager.querySelectorAll(".page");
       pages.forEach((p, i) => { if (keep[i]) p.scrollTop = keep[i]; });
@@ -759,6 +894,7 @@
       bandLabel: (b) => T.bands[b.key].label,
       stations: stations(), updated: state.data?.updated,
       world: worldForMap(), usBandFor, usLabel: (b) => T.usBands[b.key].label,
+      fires: state.fires,
       coords: state.coords,
       onOpen: (id) => { closeMap(); openStation(id); },
       onOpenWorld: (p) => { closeMap(); openWorld(p); },
@@ -789,7 +925,7 @@
     if (window.JerebuMap) return Promise.resolve();
     if (!mapScript) mapScript = new Promise((res, rej) => {
       const s = document.createElement("script");
-      s.src = "map.js?v=3"; s.onload = res; s.onerror = rej;
+      s.src = "map.js?v=4"; s.onload = res; s.onerror = rej;
       document.head.appendChild(s);
     });
     return mapScript;
@@ -812,6 +948,86 @@
     window.JerebuFX?.resume(); markDot();
     window.JerebuMap?.close();
   }
+
+  /* ---------- Toast ---------- */
+  let toastT;
+  function toast(msg) {
+    const el = $("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toastT);
+    toastT = setTimeout(() => el.classList.remove("show"), 2200);
+  }
+
+  /* ---------- Share a reading as an image ---------- */
+  const SKY_TOP = { good: "#4d8fdc", moderate: "#5b9a86", unhealthy: "#8a7a4c", very: "#9a6a44", hazard: "#8c4640", purple: "#74508a", maroon: "#7a3a46", none: "#4f5c6e" };
+  async function shareEntry(i) {
+    const e = renderList_[i];
+    if (!e || !e.s) return;
+    const s = e.s, band = bandOf(s), sky = skyOf(band), label = bandText(band).label, unit = unitOf(s);
+    const W = 1080, H = 1350, c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    const g = c.getContext("2d");
+    const grad = g.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, SKY_TOP[sky] || SKY_TOP.none); grad.addColorStop(1, SKY_BOTTOM[sky] || SKY_BOTTOM.none);
+    g.fillStyle = grad; g.fillRect(0, 0, W, H);
+    const font = getComputedStyle(document.body).fontFamily;
+    g.fillStyle = "#fff"; g.textAlign = "center";
+    g.font = `600 44px ${font}`; g.globalAlpha = 0.8; g.fillText("JerebuNow", W / 2, 140); g.globalAlpha = 1;
+    g.font = `500 84px ${font}`; g.fillText(s.name, W / 2, 330, W - 120);
+    g.font = `200 340px ${font}`; g.fillText(String(s.api), W / 2, 680);
+    g.font = `500 52px ${font}`; g.fillText(`${unit} · ${label}`, W / 2, 790, W - 120);
+    g.font = `400 40px ${font}`; g.globalAlpha = 0.8;
+    g.fillText(s.state || "", W / 2, 860, W - 120);
+    const when = new Date(s.readingTime || state.data.updated);
+    g.fillText(isNaN(when) ? "" : when.toLocaleString(T.locale, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }), W / 2, 920);
+    g.font = `400 34px ${font}`; g.globalAlpha = 0.7;
+    g.fillText(isIQ(s) ? "IQAir · US AQI" : "DOE Malaysia · APIMS", W / 2, H - 150);
+    g.fillText(location.host + location.pathname.replace(/index\.html$/, ""), W / 2, H - 95);
+    g.globalAlpha = 1;
+    const text = T.shareText(s.name, s.api, unit, label);
+    const blob = await new Promise((r) => c.toBlob(r, "image/png"));
+    const file = blob && new File([blob], "jerebunow.png", { type: "image/png" });
+    try {
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text }); return; }
+      if (navigator.share) { await navigator.share({ text, url: location.href }); return; }
+    } catch (err) { if (err && err.name === "AbortError") return; }
+    if (blob) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = "jerebunow.png";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      toast(T.shareSaved);
+    } else {
+      try { await navigator.clipboard.writeText(text); toast(T.shareCopied); } catch {}
+    }
+  }
+
+  /* ---------- Pull to refresh ---------- */
+  let ptr = null;
+  $("pager").addEventListener("touchstart", (e) => {
+    const page = e.target.closest(".page");
+    if (!page || page.scrollTop > 0 || e.touches.length !== 1) return;
+    ptr = { page, y0: e.touches[0].clientY, x0: e.touches[0].clientX, d: 0, el: page.parentElement.querySelector(".ptr") };
+  }, { passive: true });
+  $("pager").addEventListener("touchmove", (e) => {
+    if (!ptr) return;
+    const dy = e.touches[0].clientY - ptr.y0, dx = Math.abs(e.touches[0].clientX - ptr.x0);
+    if (dx > Math.abs(dy) || ptr.page.scrollTop > 0) { ptr.el && ptr.el.style.removeProperty("--pull"); ptr = null; return; }
+    ptr.d = Math.max(0, dy);
+    if (ptr.el) { ptr.el.style.setProperty("--pull", Math.min(1, ptr.d / 90).toFixed(3)); ptr.el.classList.toggle("ready", ptr.d > 90); }
+  }, { passive: true });
+  $("pager").addEventListener("touchend", async () => {
+    if (!ptr) return;
+    const { d, el } = ptr; ptr = null;
+    if (!el) return;
+    if (d > 90) {
+      el.classList.add("spin");
+      const res = await refresh();
+      el.classList.remove("spin", "ready"); el.style.removeProperty("--pull");
+      toast(res === "changed" ? T.refreshed : T.upToDate);
+    } else { el.classList.remove("ready"); el.style.removeProperty("--pull"); }
+  });
 
   /* ---------- Swipe left to delete (locations list) ---------- */
   const OPEN_X = -92;
@@ -923,11 +1139,13 @@
     loadAllWorld();
     if (state.coords) loadMeIQ();
     const stamp = data.updated + ":" + (data.stations?.length || 0);
-    if (stamp === state.dataStamp) return true;      // nothing new, keep the DOM as is
+    if (stamp === state.dataStamp) return "same";    // nothing new, keep the DOM as is
     state.data = data; state.dataStamp = stamp;
     render();
+    loadHistory().then(render);
+    loadFires().then(() => { if (window.JerebuMap?.isOpen()) window.JerebuMap.update(mapContext()); });
     if (window.JerebuMap?.isOpen()) window.JerebuMap.update(mapContext());
-    return true;
+    return "changed";
   }
 
   /* ---------- events ---------- */
@@ -961,6 +1179,7 @@
     const add = t.closest("[data-add]"); if (add) return addStation(add.dataset.add);
     const addW = t.closest("[data-add-world]"); if (addW) { const r = worldResults[+addW.dataset.addWorld]; if (r) addWorld(r); return; }
     const retry = t.closest("[data-retry]"); if (retry) return loadWorld(retry.dataset.retry);
+    const sh = t.closest("[data-share]"); if (sh) return shareEntry(+sh.dataset.share);
     const act = t.closest("[data-action]");
     if (act?.dataset.action === "locate") return locate();
     if (act?.dataset.action === "reload") return refresh();

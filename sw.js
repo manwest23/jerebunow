@@ -1,9 +1,9 @@
 /* JerebuNow service worker: network first, so readings are always fresh when
    online; the last copy is shown when offline. Map tiles are left to the
    browser cache. */
-const CACHE = "jerebunow-v6";
+const CACHE = "jerebunow-v7";
 const SHELL = ["./", "index.html", "style.css", "app.js", "config.js", "i18n.js", "iqair.js", "fx.js", "map.js", "manifest.webmanifest",
-  "icons/apple-touch-icon.png", "icons/icon-192.png", "data/api.json"];
+  "icons/apple-touch-icon.png", "icons/icon-192.png", "data/api.json", "data/world.json"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

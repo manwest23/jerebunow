@@ -60,7 +60,7 @@ window.JerebuMap = (() => {
       <div class="map-canvas" id="mapCanvas"></div>
       <button class="map-float map-close" type="button" data-map="close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       <button class="map-float map-loc" type="button" data-map="me"><svg viewBox="0 0 24 24"><path d="M20.5 3.5 3.5 10.8l7.2 1.8 1.8 7.2Z"/></svg></button>
-      <div class="map-float map-legend" aria-hidden="true"><h3></h3><div class="lg"><i></i><ul></ul></div></div>
+      <div class="map-float map-legend" aria-hidden="true"><h3></h3><div class="lg"><i></i><ul></ul></div><p class="lg-src"></p></div>
       <div class="map-float map-card" aria-live="polite"></div>
       <div class="map-float timeline">
         <div class="tl-top">
@@ -92,7 +92,10 @@ window.JerebuMap = (() => {
       if (a === "close") ctx.onClose();
       else if (a === "me") flyToMe();
       else if (a === "play") togglePlay();
-      else if (a === "open" && selected) ctx.onOpen(selected);
+      else if (a === "open" && selected) {
+        const m = markers.get(selected);
+        if (m && m.it && m.it.iq) ctx.onOpenWorld(m.it.s); else ctx.onOpen(selected);
+      }
     });
     el.range.addEventListener("input", () => { stopPlay(); setStep(+el.range.value); });
   }
@@ -104,6 +107,8 @@ window.JerebuMap = (() => {
     el.me.hidden = !ctx.coords;
     el.legend.querySelector("h3").textContent = t.mapTitle;
     el.legend.querySelector("ul").innerHTML = ctx.bands.slice().reverse().map((b) => `<li>${ctx.bandLabel(b)}</li>`).join("");
+    el.legend.querySelector(".lg-src").innerHTML = `<span><i class="k-doe"></i>${t.legendDoe}</span>` +
+      ((ctx.world || []).length ? `<span><i class="k-iq"></i>${t.legendIQ}</span>` : "");
     el.title.textContent = t.timelineTitle;
     el.range.setAttribute("aria-label", t.last24);
     root.setAttribute("aria-label", t.openMap);
@@ -162,34 +167,47 @@ window.JerebuMap = (() => {
   }
 
   /* ---------- markers ---------- */
+  // Everything with a bubble: DOE stations (Malaysian API) and IQAir cities (US AQI)
+  function items() {
+    const list = ctx.stations.map((s) => ({ key: s.id, s, iq: false }));
+    for (const s of ctx.world || []) list.push({ key: "iq:" + s.lat.toFixed(2) + "," + s.lon.toFixed(2), s, iq: true });
+    return list;
+  }
   function syncMarkers() {
     const seen = new Set();
-    for (const s of ctx.stations) {
-      seen.add(s.id);
-      let m = markers.get(s.id);
+    for (const it of items()) {
+      seen.add(it.key);
+      let m = markers.get(it.key);
       if (!m) {
         const node = document.createElement("div");
-        node.className = "mk";
-        node.innerHTML = "<b></b>";
-        node.addEventListener("click", (e) => { e.stopPropagation(); select(s.id); });
-        m = { node, marker: new maplibregl.Marker({ element: node, anchor: "bottom" }).setLngLat([s.lon, s.lat]).addTo(map) };
-        markers.set(s.id, m);
+        node.className = it.iq ? "mk iq" : "mk";
+        node.innerHTML = `<b></b><em></em>`;
+        const key = it.key;
+        node.addEventListener("click", (e) => { e.stopPropagation(); select(key); });
+        m = { node, marker: new maplibregl.Marker({ element: node, anchor: "bottom" }).setLngLat([it.s.lon, it.s.lat]).addTo(map) };
+        markers.set(it.key, m);
       }
-      m.node.setAttribute("aria-label", s.name);
+      m.it = it;
+      m.node.lastChild.textContent = it.s.name;
+      m.node.setAttribute("aria-label", it.s.name);
     }
     for (const [id, m] of markers) if (!seen.has(id)) { m.marker.remove(); markers.delete(id); }
     paintMarkers();
   }
+  const nowStep = () => step === steps - 1;
+  // IQAir cities have no hourly history here, so they show only at "Now"
+  function valueOf(it) { return it.iq ? (nowStep() ? it.s.api : null) : valueAt(it.s, step); }
+  function bandOfIt(it, v) { return it.iq ? ctx.usBandFor(v) : ctx.bandFor(v); }
   function paintMarkers() {
-    for (const s of ctx.stations) {
-      const m = markers.get(s.id);
-      if (!m) continue;
-      const v = valueAt(s, step);
+    for (const [key, m] of markers) {
+      const it = m.it;
+      if (!it) continue;
+      const v = valueOf(it);
       m.node.hidden = v == null;
       if (v == null) continue;
       m.node.firstChild.textContent = v;
-      m.node.style.setProperty("--c", ctx.bandFor(v).hex);
-      m.node.classList.toggle("sel", s.id === selected);
+      m.node.style.setProperty("--c", bandOfIt(it, v).hex);
+      m.node.classList.toggle("sel", key === selected);
     }
     declutter();
   }
@@ -210,11 +228,12 @@ window.JerebuMap = (() => {
     if (!map) return;
     const c = map.project(map.getCenter());
     const items = [];
-    for (const s of ctx.stations) {
-      const m = markers.get(s.id);
-      if (!m || m.node.hidden) continue;
-      const p = map.project([s.lon, s.lat]);
-      items.push({ m, p, pri: s.id === selected ? -1 : Math.hypot(p.x - c.x, p.y - c.y) });
+    root.classList.toggle("names", map.getZoom() >= 8.2);
+    for (const [key, m] of markers) {
+      if (!m.it || m.node.hidden) continue;
+      const p = map.project([m.it.s.lon, m.it.s.lat]);
+      // DOE stations win ties near the centre; IQAir fills the gaps
+      items.push({ m, p, pri: key === selected ? -1 : Math.hypot(p.x - c.x, p.y - c.y) + (m.it.iq ? 24 : 0) });
     }
     items.sort((a, b) => a.pri - b.pri);
     const placed = [];
@@ -228,11 +247,13 @@ window.JerebuMap = (() => {
   /* ---------- selection card ---------- */
   function select(id) {
     selected = id;
-    const s = ctx.stations.find((x) => x.id === id);
-    if (!s) return hideCard();
-    const v = valueAt(s, step) ?? s.api, b = ctx.bandFor(v);
+    const m = markers.get(id), it = m && m.it;
+    if (!it) return hideCard();
+    const s = it.s;
+    const v = valueOf(it) ?? s.api, b = bandOfIt(it, v);
+    const label = it.iq ? `${ctx.usLabel(b)} · ${ctx.t.usAqi}` : `${ctx.bandLabel(b)} · ${ctx.t.api}`;
     el.card.innerHTML = `<span class="mc-api" style="background:${b.hex}">${v}</span>
-      <span class="mc-txt"><b>${escapeHTML(s.name)}</b><span>${escapeHTML(s.state)} · ${ctx.bandLabel(b)}</span></span>
+      <span class="mc-txt"><b>${escapeHTML(s.name)}</b><span>${escapeHTML(s.state)}</span><span>${escapeHTML(label)}${it.iq ? " · IQAir" : ""}</span></span>
       <button class="pill" type="button" data-map="open">${ctx.t.open}</button>`;
     el.card.classList.add("show");
     paintMarkers();

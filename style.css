@@ -604,3 +604,23 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
           backdrop-filter: blur(18px) saturate(140%);
 }
 .slide:not(.active):has(.wx-rain, .wx-storm, .wx-snow) .card { background: rgba(34, 40, 52, 0.42); }
+
+/* ---------- Map: names, IQAir rings, legend key ---------- */
+.mk em {
+  display: none; position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  white-space: nowrap; font-style: normal; font-size: 12px; font-weight: 600; color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,.85), 0 0 8px rgba(0,0,0,.5); pointer-events: none;
+}
+.names .mk:not(.dot) em { display: block; }
+.mk.iq b { background: rgba(24,27,34,.78); box-shadow: 0 0 0 2.5px var(--c), 0 0 0 5px rgba(24,27,34,.55), 0 3px 10px rgba(0,0,0,.45); }
+.mk.iq::after { display: none; }
+.mk.iq { transform: translateY(-30%); }
+.mk.iq.dot b { box-shadow: 0 0 0 2px var(--c), 0 0 0 4px rgba(20,22,28,.85); background: rgba(20,22,28,.85); }
+.map-legend .lg-src { margin: 10px 0 0; padding-top: 8px; border-top: 0.5px solid var(--sep); display: grid; gap: 6px; font-size: 12px; color: var(--ink-2); }
+.map-legend .lg-src span { display: flex; align-items: center; gap: 8px; }
+.map-legend .lg-src i { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.map-legend .k-doe { background: rgba(24,27,34,.9); box-shadow: 0 0 0 2px #f2c230; }
+.map-legend .k-iq { background: rgba(24,27,34,.9); box-shadow: 0 0 0 2px #f08a24, 0 0 0 4px rgba(255,255,255,.25); }
+.map-card .mc-txt span + span { font-size: 13px; color: var(--ink-3); }
+.mk.iq.sel b { background: #fff; color: #111; }
+.mk.iq:not(.dot) em { display: block; }    /* the few IQAir cities are always named */

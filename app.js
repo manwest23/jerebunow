@@ -8,6 +8,7 @@
   "use strict";
 
   const DATA_URL = "data/api.json";
+  const WORLD_URL = "data/world.json";        // IQAir city snapshot, refreshed every 3 h
   const REFRESH_MS = 15 * 60 * 1000;
   const SAVED_KEY = "jerebunow.saved";
   const PAGE_KEY = "jerebunow.page";
@@ -48,7 +49,7 @@
   const state = {
     data: null, dataStamp: null, coords: null, locating: true,
     saved: [], page: 0, editing: false, lang: "en",
-    places: {}, iq: {}, iqMe: null, iqStamp: 0
+    places: {}, iq: {}, iqMe: null, iqStamp: 0, world: []
   };
   let T = I18N.en;
   const otherLang = () => (state.lang === "en" ? "ms" : "en");
@@ -136,6 +137,22 @@
       if (window.__HAZE_SAMPLE__) return window.__HAZE_SAMPLE__;
       throw err;
     }
+  }
+  async function loadWorldSnapshot() {
+    try {
+      const res = await fetch(WORLD_URL + "?t=" + Date.now(), { cache: "no-store" });
+      if (!res.ok) return;
+      const w = await res.json();
+      // Only use readings from the last 6 hours
+      state.world = (w.places || []).filter((p) => Number.isFinite(p.api) &&
+        (!p.readingTime || Date.now() - new Date(p.readingTime) < 6 * 3600000));
+    } catch { /* optional */ }
+  }
+  // A snapshot city within 12 km of a point, so adding it needs no API call
+  function snapshotNear(lat, lon) {
+    let best = null, bd = 12;
+    for (const p of state.world) { const d = km({ lat, lon }, p); if (d < bd) { bd = d; best = p; } }
+    return best;
   }
   function getPosition() {
     return new Promise((resolve) => {
@@ -702,13 +719,14 @@
     const id = "w:" + IQ.cell(r.lat, r.lon);
     if (!state.places[id]) { state.places[id] = { name: r.name, admin: r.admin, country: r.country, lat: r.lat, lon: r.lon }; store.set(PLACES_KEY, state.places); }
     addStation(id);
-    loadWorld(id);
+    if (!(state.iq[id] && state.iq[id].station)) loadWorld(id);
   }
   async function loadWorld(id) {
     const p = state.places[id];
     if (!p) return;
     if (state.iq[id] && state.iq[id].error && !state.iq[id].station) { delete state.iq[id]; state.iqStamp++; render(); }
-    const res = await IQ.nearest(p.lat, p.lon);
+    const snap = snapshotNear(p.lat, p.lon);
+    const res = snap ? { station: snap, cached: true } : await IQ.nearest(p.lat, p.lon);
     if (!state.places[id]) return;                          // removed while loading
     state.iq[id] = res; state.iqStamp++;
     render();
@@ -721,7 +739,8 @@
     if (!IQ.enabled || !state.coords) return;
     const n = nearest(state.coords);
     if (n && n.d <= DOE_FAR_KM) { if (state.iqMe) { state.iqMe = null; state.iqStamp++; render(); } return; }
-    const res = await IQ.nearest(state.coords.lat, state.coords.lon);
+    const snap = snapshotNear(state.coords.lat, state.coords.lon);
+    const res = snap ? { station: snap, cached: true } : await IQ.nearest(state.coords.lat, state.coords.lon);
     state.iqMe = res && res.station ? res : null; state.iqStamp++;
     render();
   }
@@ -739,17 +758,38 @@
       t: T, lang: state.lang, bands: BANDS, bandFor,
       bandLabel: (b) => T.bands[b.key].label,
       stations: stations(), updated: state.data?.updated,
+      world: worldForMap(), usBandFor, usLabel: (b) => T.usBands[b.key].label,
       coords: state.coords,
       onOpen: (id) => { closeMap(); openStation(id); },
+      onOpenWorld: (p) => { closeMap(); openWorld(p); },
       onClose: () => closeMap()
     };
+  }
+  // IQAir places for the map: snapshot cities + saved world places + My Location
+  function worldForMap() {
+    const out = [], seen = [];
+    const add = (s) => {
+      if (!s || !Number.isFinite(s.api)) return;
+      if (seen.some((q) => km(q, s) < 5)) return;            // same city twice
+      seen.push(s); out.push(s);
+    };
+    state.world.forEach(add);
+    Object.values(state.iq).forEach((r) => add(r && r.station));
+    add(state.iqMe && state.iqMe.station);
+    return out;
+  }
+  function openWorld(s) {
+    const id = "w:" + IQ.cell(s.lat, s.lon);
+    if (state.saved.includes(id)) { showList(false); return goTo(entries().findIndex((e) => e.id === id), false); }
+    state.iq[id] = { station: s, cached: true };
+    addWorld({ name: s.name, admin: (s.state || "").split(", ")[0] === s.country ? "" : (s.state || "").split(", ")[0], country: s.country, lat: s.lat, lon: s.lon });
   }
   let mapScript;
   function loadMapModule() {
     if (window.JerebuMap) return Promise.resolve();
     if (!mapScript) mapScript = new Promise((res, rej) => {
       const s = document.createElement("script");
-      s.src = "map.js?v=2"; s.onload = res; s.onerror = rej;
+      s.src = "map.js?v=3"; s.onload = res; s.onerror = rej;
       document.head.appendChild(s);
     });
     return mapScript;
@@ -879,6 +919,7 @@
         <p>${T.loadError}</p><button class="pill" type="button" data-action="reload">${T.tryAgain}</button></section></div></div></section>`;
       return false;
     }
+    await loadWorldSnapshot();
     loadAllWorld();
     if (state.coords) loadMeIQ();
     const stamp = data.updated + ":" + (data.stations?.length || 0);

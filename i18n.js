@@ -206,11 +206,16 @@ window.JEREBU_I18N = {
     schoolNow: "This station is above 180. The closure rule may apply here, so check your school's announcement.",
     school3: "This station has been above 150 on each of the last 3 days. The closure rule may apply here.",
     schoolNo: "The closure rule is not met at this station right now.",
+    childcare: "Kindergartens (tadika) and childcare centres (taska) follow your district or state disaster committee, so check local announcements. For example, Batu Pahat closed them when its API passed 200.",
 
     // Week chart
     weekHead: "Past 7 days",
     weekNote: "Daily highest reading. History builds up over the week.",
     weekMax: (v) => `Highest ${v}`,
+    weekWorstAll: (n) => `Today is the worst day in the last ${n} days.`,
+    weekBestAll: (n) => `Today is the cleanest day in the last ${n} days.`,
+    weekWorstSince: (day) => `Today is the worst since ${day}.`,
+    weekPeak: (v, day) => `This week's highest was ${v} on ${day}.`,
 
     // Share
     share: "Share",
@@ -222,6 +227,7 @@ window.JEREBU_I18N = {
     yourPlaces: "Your places",
     refreshed: "Updated",
     upToDate: "Already up to date",
+    checkedAt: (t) => `Last checked ${t}`,
     pullToRefresh: "Pull to refresh",
     privacy: "Your location stays on your phone. It is only sent to IQAir, rounded to about 1 km, when you're outside DOE coverage.",
     srReading: (v, u, label) => `${u} ${v}, ${label}`,
@@ -446,10 +452,15 @@ window.JEREBU_I18N = {
     schoolNow: "Stesen ini melebihi 180. Peraturan penutupan mungkin terpakai di sini, jadi semak makluman sekolah anda.",
     school3: "Stesen ini melebihi 150 pada setiap hari dalam 3 hari lalu. Peraturan penutupan mungkin terpakai di sini.",
     schoolNo: "Peraturan penutupan belum dicapai di stesen ini.",
+    childcare: "Tadika dan taska mengikut arahan jawatankuasa pengurusan bencana daerah atau negeri anda, jadi semak makluman tempatan. Contohnya, Batu Pahat menutupnya apabila IPU melebihi 200.",
 
     weekHead: "7 hari lalu",
     weekNote: "Bacaan tertinggi setiap hari. Sejarah bertambah sepanjang minggu.",
     weekMax: (v) => `Tertinggi ${v}`,
+    weekWorstAll: (n) => `Hari ini paling teruk dalam ${n} hari lalu.`,
+    weekBestAll: (n) => `Hari ini paling bersih dalam ${n} hari lalu.`,
+    weekWorstSince: (day) => `Hari ini paling teruk sejak hari ${day}.`,
+    weekPeak: (v, day) => `Bacaan tertinggi minggu ini ${v} pada hari ${day}.`,
 
     share: "Kongsi",
     shareText: (name, v, u, label) => `${name}: ${u} ${v} (${label}) di JerebuNow`,
@@ -459,6 +470,7 @@ window.JEREBU_I18N = {
     yourPlaces: "Tempat anda",
     refreshed: "Dikemas kini",
     upToDate: "Sudah terkini",
+    checkedAt: (t) => `Kali terakhir disemak ${t}`,
     pullToRefresh: "Tarik untuk muat semula",
     privacy: "Lokasi anda kekal dalam telefon anda. Ia hanya dihantar kepada IQAir, dibundarkan kira-kira 1 km, apabila anda di luar liputan JAS.",
     srReading: (v, u, label) => `${u} ${v}, ${label}`,

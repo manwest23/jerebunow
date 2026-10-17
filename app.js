@@ -78,6 +78,7 @@
   const weekday = (iso, style) => new Date(iso + "T00:00:00").toLocaleDateString(T.locale, { weekday: style });
 
   const fmtTime = (d) => d.toLocaleTimeString(T.locale, { hour: "numeric", minute: "2-digit", timeZone: MY_TZ });
+  const fmtLocalTime = (d) => d.toLocaleTimeString(T.locale, { hour: "numeric", minute: "2-digit" });
   // Sunrise and sunset (NOAA approximation, good to a minute or two)
   function sunTimes(date, lat, lon) {
     const rad = Math.PI / 180;
@@ -428,8 +429,27 @@
     return `<section class="card">
       <h2 class="card-head">${ICON.check}${T.whatToDo}</h2>
       <ul class="todo">${tips.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
-      ${school ? `<div class="school${school.met ? " met" : ""}"><p>${esc(school.text)}</p><p class="small">${T.schoolRule}</p></div>` : ""}
+      ${school ? `<div class="school${school.met ? " met" : ""}"><p>${esc(school.text)}</p><p class="small">${T.schoolRule}</p><p class="small">${T.childcare}</p></div>` : ""}
     </section>`;
+  }
+
+  // One plain sentence comparing today with the days before it
+  function weekSentence(days) {
+    if (days.length < 3) return "";
+    const [, today] = days[days.length - 1];
+    const prev = days.slice(0, -1);
+    const n = days.length;
+    if (prev.every(([, v]) => today > v)) return T.weekWorstAll(n);
+    if (prev.every(([, v]) => today < v)) return T.weekBestAll(n);
+    // Latest earlier day that was at least as bad as today
+    for (let k = prev.length - 1; k >= 0; k--) {
+      if (prev[k][1] >= today) {
+        if (k < prev.length - 1) return T.weekWorstSince(weekday(prev[k][0], "long"));
+        break;                                  // yesterday was as bad, so "since" says nothing
+      }
+    }
+    const peak = prev.reduce((a, b) => (b[1] > a[1] ? b : a));
+    return T.weekPeak(peak[1], weekday(peak[0], "long"));
   }
 
   // ---- 7-day chart (DOE) ----
@@ -439,12 +459,15 @@
     if (!days.length) return "";
     const max = Math.max(200, ...days.map(([, v]) => v));
     const cols = days.map(([d, v], i) => {
-      const label = i === days.length - 1 ? T.today : weekday(d, "short");
-      return `<div class="wk"><span class="v">${v}</span>
+      // Short weekday for every column (fits 7 across at any text size); today is bold
+      const label = weekday(d, "short"), isToday = i === days.length - 1;
+      return `<div class="wk${isToday ? " today" : ""}"><span class="v">${v}</span>
         <span class="bar" aria-hidden="true"><i style="height:${Math.max(6, (v / max) * 100).toFixed(0)}%;background:${bandFor(v).color}"></i></span>
         <span class="t">${esc(label)}</span></div>`;
     }).join("");
+    const line = weekSentence(days);
     return `<section class="card"><h2 class="card-head">${ICON.cal}${T.weekHead}</h2>
+      ${line ? `<p class="week-line">${esc(line)}</p>` : ""}
       <div class="week" role="img" aria-label="${esc(days.map(([d, v]) => `${weekday(d, "long")} ${v}`).join(", "))}">${cols}</div>
       ${days.length < 7 ? `<p class="small">${T.weekNote}</p>` : ""}</section>`;
   }
@@ -563,10 +586,20 @@
       <p>${T.srcOfficial} <a href="https://eqms.doe.gov.my/APIMS/main" target="_blank" rel="noopener">eqms.doe.gov.my</a></p>`;
     return `<footer class="foot">
       ${langSwitch()}
+      <p class="checked">${checkedText()}</p>
       ${src}
       <p class="privacy">${T.privacy}</p>
       <p class="credit">${T.developedBy} <b>manwest</b></p>
     </footer>`;
+  }
+
+  function checkedText() {
+    return state.checkedAt ? esc(T.checkedAt(fmtLocalTime(state.checkedAt))) : "";
+  }
+  // Update the "Last checked" lines in place (pages are not rebuilt when nothing changed)
+  function paintChecked() {
+    const t = checkedText();
+    document.querySelectorAll(".foot .checked").forEach((el) => { el.innerHTML = t; });
   }
 
   function hiLo(s) {
@@ -926,7 +959,7 @@
     if (window.JerebuMap) return Promise.resolve();
     if (!mapScript) mapScript = new Promise((res, rej) => {
       const s = document.createElement("script");
-      s.src = "map.js?v=4"; s.onload = res; s.onerror = rej;
+      s.src = "map.js?v=6"; s.onload = res; s.onerror = rej;
       document.head.appendChild(s);
     });
     return mapScript;
@@ -1132,7 +1165,7 @@
       el.classList.add("spin");
       const res = await refresh();
       el.classList.remove("spin", "ready"); el.style.removeProperty("--pull");
-      toast(res === "changed" ? T.refreshed : T.upToDate);
+      toast(res === "changed" ? T.refreshed : res === "same" ? `${T.upToDate} · ${T.checkedAt(fmtLocalTime(state.checkedAt))}` : T.loadError);
     } else { el.classList.remove("ready"); el.style.removeProperty("--pull"); }
   });
 
@@ -1242,6 +1275,8 @@
         <p>${T.loadError}</p><button class="pill" type="button" data-action="reload">${T.tryAgain}</button></section></div></div></section>`;
       return false;
     }
+    state.checkedAt = new Date();
+    paintChecked();
     await loadWorldSnapshot();
     loadAllWorld();
     if (state.coords) loadMeIQ();
@@ -1320,6 +1355,30 @@
   let rz;
   window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => goTo(state.page, false), 120); });
   document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+
+  /* ---------- Text size: follow the iPhone's Text Size setting ----------
+     Safari exposes it through the "-apple-system-body" font (17px at the
+     default size). Text grows with it, capped at 1.5x so layouts hold. */
+  function applyTextSize() {
+    let px = 17;
+    try {
+      if (window.CSS && CSS.supports("font", "-apple-system-body")) {
+        const probe = document.createElement("span");
+        probe.style.font = "-apple-system-body";
+        probe.style.position = "absolute"; probe.style.visibility = "hidden";
+        document.body.appendChild(probe);
+        const v = parseFloat(getComputedStyle(probe).fontSize);
+        probe.remove();
+        if (Number.isFinite(v) && v > 0) px = v;
+      }
+    } catch { /* keep the default */ }
+    px = Math.min(25.5, Math.max(14, px));
+    const val = px + "px";
+    if (document.documentElement.style.fontSize !== val) document.documentElement.style.fontSize = val;
+  }
+  applyTextSize();
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) applyTextSize(); });
+  window.addEventListener("resize", applyTextSize);
 
   /* ---------- start ---------- */
   state.saved = store.get(SAVED_KEY, []);

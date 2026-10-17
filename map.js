@@ -110,7 +110,7 @@ window.JerebuMap = (() => {
     const fireCount = (ctx.fires && ctx.fires.count) || 0;
     el.legend.querySelector(".lg-src").innerHTML = `<span><i class="k-doe"></i>${t.legendDoe}</span>` +
       ((ctx.world || []).length ? `<span><i class="k-iq"></i>${t.legendIQ}</span>` : "") +
-      (fireCount ? `<span><i class="k-fire"></i>${t.legendFires(fireCount)}</span>` : "");
+      (fireCount ? `<span><i class="k-fire"><svg viewBox="0 0 24 30" aria-hidden="true"><path d="M12 1c3 7 10 11 9 19-.5 6-4.5 9-9 9s-8.5-3-9-8.5C2.5 15 7 13 8 7c2 3 2.5 6 2 8 3-3 3.5-9 2-14Z" fill="#ff7a1a" stroke="rgba(60,16,0,.5)"/><path d="M12 16c1.5 3.5 5 5.5 4.5 9.5-.3 2.5-2.2 3.5-4.5 3.5s-4.2-1-4.5-3.5c-.3-3 2-4 2.5-7 1 1.5 1.3 3 1 4 1.5-1.5 1.7-4.5 1-6.5Z" fill="#ffd84a"/></svg></i>${t.legendFires(fireCount)}</span>` : "");
     el.title.textContent = t.timelineTitle;
     el.range.setAttribute("aria-label", t.last24);
     root.setAttribute("aria-label", t.openMap);
@@ -257,6 +257,9 @@ window.JerebuMap = (() => {
     el.card.innerHTML = `<span class="mc-api" style="background:${b.hex}">${v}</span>
       <span class="mc-txt"><b>${escapeHTML(s.name)}</b><span>${escapeHTML(s.state)}</span><span>${escapeHTML(label)}${it.iq ? " · IQAir" : ""}</span></span>
       <button class="pill" type="button" data-map="open">${ctx.t.open}</button>`;
+    // Sit just above the timeline, whose height follows the text size
+    const tl = root.querySelector(".timeline");
+    el.card.style.bottom = `calc(env(safe-area-inset-bottom, 0px) + ${(tl ? tl.offsetHeight : 130) + 26}px)`;
     el.card.classList.add("show");
     paintMarkers();
   }
@@ -361,10 +364,17 @@ window.JerebuMap = (() => {
         map.addLayer({ id: "fires-glow", type: "circle", source: "fires", paint: {
           "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, ["min", 9, ["+", 3, ["*", 0.6, ["get", "n"]]]], 9, ["min", 22, ["+", 8, ["*", 1.2, ["get", "n"]]]]],
           "circle-color": "#ff7a1a", "circle-opacity": 0.22, "circle-blur": 0.9 } }, before);
-        map.addLayer({ id: "fires", type: "circle", source: "fires", paint: {
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 1.6, 9, 4],
-          "circle-color": ["interpolate", ["linear"], ["get", "frp"], 0, "#ffb347", 80, "#ff6a1a", 400, "#ff2d1a"],
-          "circle-opacity": 0.95 } }, before);
+        // Flame icons, bigger when zoomed in and for stronger fires (FRP)
+        if (!map.hasImage("flame")) map.addImage("flame", flameImage(), { pixelRatio: 2 });
+        map.addLayer({ id: "fires", type: "symbol", source: "fires", layout: {
+          "icon-image": "flame", "icon-anchor": "bottom",
+          "icon-allow-overlap": true, "icon-ignore-placement": true,
+          "symbol-sort-key": ["get", "frp"],
+          "icon-size": ["interpolate", ["linear"], ["zoom"],
+            4, ["*", 0.42, ["interpolate", ["linear"], ["get", "frp"], 0, 0.8, 300, 1.25]],
+            7, ["*", 0.7, ["interpolate", ["linear"], ["get", "frp"], 0, 0.8, 300, 1.25]],
+            10, ["*", 1.0, ["interpolate", ["linear"], ["get", "frp"], 0, 0.8, 300, 1.25]]]
+        } }, before);
         syncMarkers(); syncMe(); declutter();
       });
       map.on("error", (e) => { if (!map.loaded() && String(e?.error?.message || "").match(/style|fetch/i)) el.status.textContent = ctx.t.mapError; });
@@ -381,6 +391,32 @@ window.JerebuMap = (() => {
     const layers = map.getStyle().layers || [];
     const l = layers.find((x) => x.type === "symbol");
     return l ? l.id : undefined;
+  }
+  // A small flame drawn once on a canvas (24 x 30 points at 2x)
+  function flameImage() {
+    const w = 48, h = 60, c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    const g = c.getContext("2d");
+    const flame = (sx, sy, ox, oy) => {
+      g.beginPath();
+      g.moveTo(ox + 24 * sx, oy + 2 * sy);
+      g.bezierCurveTo(ox + 30 * sx, oy + 16 * sy, ox + 44 * sx, oy + 24 * sy, ox + 42 * sx, oy + 40 * sy);
+      g.bezierCurveTo(ox + 41 * sx, oy + 52 * sy, ox + 33 * sx, oy + 58 * sy, ox + 24 * sx, oy + 58 * sy);
+      g.bezierCurveTo(ox + 15 * sx, oy + 58 * sy, ox + 7 * sx, oy + 52 * sy, ox + 6 * sx, oy + 41 * sy);
+      g.bezierCurveTo(ox + 5 * sx, oy + 30 * sy, ox + 14 * sx, oy + 26 * sy, ox + 16 * sx, oy + 14 * sy);
+      g.bezierCurveTo(ox + 20 * sx, oy + 20 * sy, ox + 21 * sx, oy + 26 * sy, ox + 20 * sx, oy + 30 * sy);
+      g.bezierCurveTo(ox + 26 * sx, oy + 24 * sy, ox + 27 * sx, oy + 12 * sy, ox + 24 * sx, oy + 2 * sy);
+      g.closePath();
+    };
+    let gr = g.createLinearGradient(0, 0, 0, h);
+    gr.addColorStop(0, "#ffb02e"); gr.addColorStop(1, "#e8380d");
+    flame(1, 1, 0, 0); g.fillStyle = gr; g.fill();
+    g.lineWidth = 2; g.strokeStyle = "rgba(60,16,0,.55)"; g.stroke();
+    gr = g.createLinearGradient(0, 28, 0, h);
+    gr.addColorStop(0, "#fff3a8"); gr.addColorStop(1, "#ffc93a");
+    flame(0.5, 0.5, 12, 29); g.fillStyle = gr; g.fill();
+    const d = g.getImageData(0, 0, w, h);
+    return { width: w, height: h, data: new Uint8Array(d.data.buffer) };
   }
   function firesGeoJSON() {
     const pts = (ctx.fires && ctx.fires.points) || [];

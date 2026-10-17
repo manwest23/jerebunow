@@ -72,8 +72,10 @@ The free plan allows 5 calls per minute and 10,000 per month, shared by everyone
 
 - **Best time to run:** the next dry window after sunrise or before sunset, using MET's forecast and the reading at that hour yesterday.
 - **What to do:** mask, purifier and indoor tips per level, and KPM's school closure rule (above 180, or above 150 for three days in a row, announced 8 October 2026) checked against each station's last 3 days.
-- **Past 7 days:** daily highest reading, from `data/history.json`, which the hourly job keeps.
-- **Fire hotspots:** NASA FIRMS VIIRS detections from the last 24 hours on the map.
+- **Past 7 days:** daily highest reading, from `data/history.json`, which the hourly job keeps, with a line such as "Today is the worst since Tuesday" once there are 3 days of history.
+- **Childcare:** kindergartens and childcare centres follow district or state disaster committees, so the app points people to local announcements rather than stating one rule.
+- **Larger text:** text follows the iPhone's Text Size setting (up to 1.5×); the big reading and map bubbles stay fixed, as in Apple Weather.
+- **Fire hotspots:** NASA FIRMS VIIRS detections from the last 24 hours, shown as flames sized by fire strength.
 - **Share:** a ready-made image of the current reading for WhatsApp.
 - **Haze alerts:** see `worker/README.md`.
 

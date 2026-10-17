@@ -1,1 +1,306 @@
-{"updated":null,"source":"IQAir (US AQI)","places":[]}
+{
+ "updated": "2026-10-17T22:01:36.697Z",
+ "source": "IQAir (US AQI)",
+ "places": [
+  {
+   "label": "Kuala Lumpur",
+   "source": "iqair",
+   "name": "Kuala Lumpur",
+   "state": "Kuala Lumpur, Malaysia",
+   "country": "Malaysia",
+   "lat": 3.106236,
+   "lon": 101.717917,
+   "api": 181,
+   "pollutant": "PM2.5",
+   "readingTime": "2026-10-17T21:00:00.000Z",
+   "history": [],
+   "weather": {
+    "tp": 26,
+    "hu": 88,
+    "ws": 1.39,
+    "ic": "10n",
+    "ts": "2026-10-17T21:00:00.000Z"
+   }
+  },
+  {
+   "label": "Johor Bahru",
+   "source": "iqair",
+   "name": "Johor Bahru",
+   "state": "Johor, Malaysia",
+   "country": "Malaysia",
+   "lat": 1.494625,
+   "lon": 103.735975,
+   "api": 200,
+   "pollutant": "PM2.5",
+   "readingTime": "2026-10-17T21:00:00.000Z",
+   "history": [],
+   "weather": {
+    "tp": 26,
+    "hu": 90,
+    "ws": 0.83,
+    "ic": "03n",
+    "ts": "2026-10-17T21:00:00.000Z"
+   }
+  },
+  {
+   "label": "George Town",
+   "source": "iqair",
+   "name": "George Town",
+   "state": "Penang, Malaysia",
+   "country": "Malaysia",
+   "lat": 5.41123,
+   "lon": 100.33543,
+   "api": 79,
+   "pollutant": "PM2.5",
+   "readingTime": "2026-10-17T21:00:00.000Z",
+   "history": [],
+   "weather": {
+    "tp": 26,
+    "hu": 87,
+    "ws": 2.5,
+    "ic": "04n",
+    "ts": "2026-10-17T21:00:00.000Z"
+   }
+  },
+  {
+   "label": "Ipoh",
+   "source": "iqair",
+   "name": "Ipoh",
+   "state": "Perak, Malaysia",
+   "country": "Malaysia",
+   "lat": 4.629444,
+   "lon": 101.11665,
+   "api": 85,
+   "pollutant": "PM2.5",
+   "readingTime": "2026-10-17T21:00:00.000Z",
+   "history": [],
+   "weather": {
+    "tp": 24,
+    "hu": 95,
+    "ws": 1.39,
+    "ic": "10n",
+    "ts": "2026-10-17T21:00:00.000Z"
+   }
+  },
+  {
+   "label": "Kuching",
+   "source": "iqair",
+   "name": "Kuching",
+   "state": "Sarawak, Malaysia",
+   "country": "Malaysia",
+   "lat": 1.562229,
+   "lon": 110.388958,
+   "api": 156,
+   "pollutant": "PM2.5",
+   "readingTime": "2026-10-17T21:00:00.000Z",
+   "history": [],
+   "weather": {
+    "tp": 24,
+    "hu": 99,
+    "ws": 1.11,
+    "ic": "10n",
+    "ts": "2026-10-17T21:00:00.000Z"
+   }
+  },
+  {
+   "label": "Melaka",
+   "source": "iqair",
+   "name": "Malacca",
+   "state": "Melaka, Malaysia",
+   "country": "Malaysia",
+   "lat": 2.196,
+   "lon": 102.2405,
+   "api": 120,
+   "pollutant": "PM2.5",
+   "readingTime": "2026-10-17T21:00:00.000Z",
+   "history": [],
+   "weather": {
+    "tp": 25,
+    "hu": 82,
+    "ws": 3.06,
+    "ic": "03n",
+    "ts": "2026-10-17T21:00:00.000Z"
+   }
+  },
+  {
+   "label": "Miri",
+   "source": "iqair",
+   "name": "Miri",
+   "state": "Sarawak, Malaysia",
+   "country": "Malaysia",
+   "lat": 4.424679,
+   "lon": 114.012426,
+   "api": 58,
+   "pollutant": "PM2.5",
+   "readingTime": "2026-10-17T21:00:00.000Z",
+   "history": [],
+   "weather": {
+    "tp": 25,
+    "hu": 95,
+    "ws": 1.39,
+    "ic": "04n",
+    "ts": "2026-10-17T21:00:00.000Z"
+   }
+  },
+  {
+   "label": "Singapore",
+   "source": "iqair",
+   "name": "Singapore",
+   "state": "Singapore",
+   "country": "Singapore",
+   "lat": 1.3669815,
+   "lon": 103.83350372,
+   "api": 192,
+   "pollutant": "PM2.5",
+   "readingTime": "2026-10-17T21:00:00.000Z",
+   "history": [],
+   "weather": {
+    "tp": 27,
+    "hu": 77,
+    "ws": 2.22,
+    "ic": "03n",
+    "ts": "2026-10-17T21:00:00.000Z"
+   }
+  },
+  {
+   "label": "Jakarta",
+   "source": "iqair",
+   "name": "Jakarta",
+   "state": "Jakarta, Indonesia",
+   "country": "Indonesia",
+   "lat": -6.236704,
+   "lon": 106.79324,
+   "api": 158,
+   "pollutant": "PM2.5",
+   "readingTime": "2026-10-17T21:00:00.000Z",
+   "history": [],
+   "weather": {
+    "tp": 28,
+    "hu": 68,
+    "ws": 1.39,
+    "ic": "03n",
+    "ts": "2026-10-17T21:00:00.000Z"
+   }
+  },
+  {
+   "label": "Bangkok",
+   "source": "iqair",
+   "name": "Phra Nakhon",
+   "state": "Bangkok, Thailand",
+   "country": "Thailand",
+   "lat": 13.76512,
+   "lon": 100.49864,
+   "api": 74,
+   "pollutant": "PM2.5",
+   "readingTime": "2026-10-17T21:00:00.000Z",
+   "history": [],
+   "weather": {
+    "tp": 26,
+    "hu": 89,
+    "ws": 2.22,
+    "ic": "10n",
+    "ts": "2026-10-17T21:00:00.000Z"
+   }
+  },
+  {
+   "label": "Medan",
+   "source": "iqair",
+   "name": "Medan",
+   "state": "North Sumatra, Indonesia",
+   "country": "Indonesia",
+   "lat": 3.5951956,
+   "lon": 98.6722227,
+   "api": 152,
+   "pollutant": "PM2.5",
+   "readingTime": "2026-10-17T21:00:00.000Z",
+   "history": [],
+   "weather": {
+    "tp": 24,
+    "hu": 96,
+    "ws": 0.56,
+    "ic": "10n",
+    "ts": "2026-10-17T21:00:00.000Z"
+   }
+  },
+  {
+   "label": "Pekanbaru",
+   "source": "iqair",
+   "name": "Pekanbaru",
+   "state": "Riau, Indonesia",
+   "country": "Indonesia",
+   "lat": 0.5070677,
+   "lon": 101.4477793,
+   "api": 195,
+   "pollutant": "PM2.5",
+   "readingTime": "2026-10-17T21:00:00.000Z",
+   "history": [],
+   "weather": {
+    "tp": 25,
+    "hu": 99,
+    "ws": 0.28,
+    "ic": "10n",
+    "ts": "2026-10-17T21:00:00.000Z"
+   }
+  },
+  {
+   "label": "Palembang",
+   "source": "iqair",
+   "name": "Palembang",
+   "state": "South Sumatra, Indonesia",
+   "country": "Indonesia",
+   "lat": -2.9760735,
+   "lon": 104.7754307,
+   "api": 591,
+   "pollutant": "PM2.5",
+   "readingTime": "2026-10-17T21:00:00.000Z",
+   "history": [],
+   "weather": {
+    "tp": 23,
+    "hu": 96,
+    "ws": 1.94,
+    "ic": "03n",
+    "ts": "2026-10-17T21:00:00.000Z"
+   }
+  },
+  {
+   "label": "Pontianak",
+   "source": "iqair",
+   "name": "Pontianak",
+   "state": "West Kalimantan, Indonesia",
+   "country": "Indonesia",
+   "lat": -0.04046,
+   "lon": 109.344387,
+   "api": 193,
+   "pollutant": "PM2.5",
+   "readingTime": "2026-10-17T21:00:00.000Z",
+   "history": [],
+   "weather": {
+    "tp": 24,
+    "hu": 98,
+    "ws": 0,
+    "ic": "10n",
+    "ts": "2026-10-17T21:00:00.000Z"
+   }
+  },
+  {
+   "label": "Bandar Seri Begawan",
+   "source": "iqair",
+   "name": "Bandar Seri Begawan",
+   "state": "Brunei and Muara, Brunei",
+   "country": "Brunei",
+   "lat": 4.88749645,
+   "lon": 114.938662912,
+   "api": 63,
+   "pollutant": "PM2.5",
+   "readingTime": "2026-10-17T21:00:00.000Z",
+   "history": [],
+   "weather": {
+    "tp": 25,
+    "hu": 98,
+    "ws": 1.11,
+    "ic": "03n",
+    "ts": "2026-10-17T21:00:00.000Z"
+   }
+  }
+ ]
+}

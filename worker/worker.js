@@ -13,7 +13,8 @@
    Developed by manwest. */
 
 const SITE = "https://jerebunow.online/";
-const DATA_URL = SITE + "data/api.json";
+// Read data straight from the repo so alerts keep working whatever the site address is.
+const DATA_URL = "https://raw.githubusercontent.com/manwest23/jerebunow/main/data/api.json";
 const MAX_SUBS = 5000;
 
 const TEXT = {

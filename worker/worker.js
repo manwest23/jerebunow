@@ -81,8 +81,12 @@ async function sha256Hex(s) {
   const h = new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(s)));
   return [...h].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
+const cors = (origin = "*") => ({
+  "access-control-allow-origin": origin, "access-control-allow-methods": "GET, POST, OPTIONS",
+  "access-control-allow-headers": "content-type", "access-control-max-age": "86400", "vary": "origin"
+});
 const json = (body, status = 200, origin = "*") => new Response(JSON.stringify(body), {
-  status, headers: { "content-type": "application/json", "access-control-allow-origin": origin, "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type" }
+  status, headers: { "content-type": "application/json", ...cors(origin) }
 });
 
 /* ---------- VAPID keys (created once, stored in KV) ---------- */
@@ -199,7 +203,8 @@ async function visitorStats(env, id) {
 async function handle(req, env) {
   const url = new URL(req.url);
   const origin = req.headers.get("origin") || "*";
-  if (req.method === "OPTIONS") return json({}, 204, origin);
+  // Browser pre-check before a POST: an empty 204 (a 204 can't carry a body)
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(origin) });
   if (url.pathname === "/vapid") return json({ publicKey: (await vapid(env)).publicKey }, 200, origin);
 
   if (url.pathname === "/hit" || url.pathname === "/stats") {

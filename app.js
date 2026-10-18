@@ -619,7 +619,7 @@
   async function checkIn() {
     if (!STATS_URL || document.hidden) return;
     try {
-      const res = await fetch(STATS_URL + "/hit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: visitorId() }) });
+      const res = await fetch(STATS_URL + "/hit", { method: "POST", headers: { "content-type": "text/plain" }, body: JSON.stringify({ id: visitorId() }) });   // plain text: no CORS pre-check
       if (!res.ok) return;                         // counter not set up yet: stay hidden
       const s = await res.json();
       if (Number.isFinite(s.live) && Number.isFinite(s.total)) { visitorStats = s; paintVisitors(); }

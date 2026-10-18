@@ -186,13 +186,13 @@
     for (const p of state.world) { const d = km({ lat, lon }, p); if (d < bd) { bd = d; best = p; } }
     return best;
   }
-  function getPosition() {
+  function getPosition(maxAge = 5 * 60 * 1000) {
     return new Promise((resolve) => {
       if (!("geolocation" in navigator)) return resolve(null);
       navigator.geolocation.getCurrentPosition(
         (p) => resolve({ lat: p.coords.latitude, lon: p.coords.longitude }),
         () => resolve(null),
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 5 * 60 * 1000 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: maxAge }
       );
     });
   }
@@ -1204,6 +1204,7 @@
     if (!el) return;
     if (d > 90) {
       el.classList.add("spin");
+      relocate(true);
       const res = await refresh();
       el.classList.remove("spin", "ready"); el.style.removeProperty("--pull");
       toast(res === "changed" ? T.refreshed : res === "same" ? `${T.upToDate} · ${T.checkedAt(fmtLocalTime(state.checkedAt))}` : T.loadError);
@@ -1323,13 +1324,32 @@
   }
 
   /* ---------- flow ---------- */
-  async function locate() {
-    state.locating = true; render();
-    state.coords = await getPosition();
+  let lastFix = 0;
+  async function locate(quiet = false) {
+    if (!quiet) { state.locating = true; render(); }
+    const c = await getPosition(quiet ? 0 : undefined);   // re-checks always want a fresh fix
     state.locating = false;
+    // A quiet check keeps the old place if this one fails, and only redraws when the user has moved
+    const moved = c && (!state.coords || km(c, state.coords) > 0.5);
+    if (c) { state.coords = c; lastFix = Date.now(); }
+    else if (!quiet) state.coords = null;
+    if (quiet && !moved) return;
     render();
     loadMeIQ();
     if (window.JerebuMap?.isOpen()) window.JerebuMap.update(mapContext());
+  }
+  // Re-check where the user is when they come back to the app (Home Screen apps
+  // are usually resumed, not restarted). Only when location is already allowed,
+  // so it never pops up a permission request on its own.
+  const RELOCATE_MS = 10 * 60 * 1000;
+  async function relocate(force = false) {
+    if (!state.coords || state.locating) return;
+    if (!force && Date.now() - lastFix < RELOCATE_MS) return;
+    try {
+      const p = navigator.permissions && await navigator.permissions.query({ name: "geolocation" });
+      if (p && p.state !== "granted") return;
+    } catch { /* no Permissions API: we already have a fix, so access was allowed */ }
+    locate(true);
   }
   async function refresh() {
     let data;
@@ -1420,7 +1440,7 @@
   $("search").addEventListener("input", (ev) => renderSearch(ev.target.value));
   let rz;
   window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => goTo(state.page, false), 120); });
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) { refresh(); checkIn(); } });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { refresh(); checkIn(); relocate(); } });
 
   /* ---------- Text size: follow the iPhone's Text Size setting ----------
      Safari exposes it through the "-apple-system-body" font (17px at the
@@ -1461,5 +1481,5 @@
   renderChrome();
 
   refresh().then((ok) => { if (ok) locate(); });
-  setInterval(refresh, REFRESH_MS);
+  setInterval(() => { refresh(); relocate(); }, REFRESH_MS);
 })();

@@ -12,7 +12,7 @@
    automatically). IDs are random and anonymous; no IP or location is kept.
    Developed by manwest. */
 
-const SITE = "https://manwest23.github.io/jerebunow/";
+const SITE = "https://jerebunow.online/";
 const DATA_URL = SITE + "data/api.json";
 const MAX_SUBS = 5000;
 

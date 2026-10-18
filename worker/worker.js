@@ -12,8 +12,9 @@
    automatically). IDs are random and anonymous; no IP or location is kept.
    Developed by manwest. */
 
-const SITE = "https://manwest23.github.io/jerebunow/";
-const DATA_URL = SITE + "data/api.json";
+const SITE = "https://jerebunow.online/";
+// Read data straight from the repo so alerts keep working whatever the site address is.
+const DATA_URL = "https://raw.githubusercontent.com/manwest23/jerebunow/main/data/api.json";
 const MAX_SUBS = 5000;
 
 const TEXT = {

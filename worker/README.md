@@ -37,6 +37,22 @@ means seen in the last 5 minutes (the app checks in every 2 minutes while open).
 D1's free plan allows 100,000 row writes a day; a new visitor costs 2 writes and a
 returning one at most 1 per check-in.
 
+## Telegram channel (optional)
+
+The Worker can post to a public Telegram channel: a summary of every state at
+7 am, and a post when a state's worst reading goes above 100, 200 or 300, or
+back to 100 or below.
+
+1. In Telegram, message **@BotFather** → `/newbot` → pick a name and a username
+   ending in `bot`. Copy the **token** it gives you.
+2. Create a **public channel** (e.g. `@jerebunow`), then add your bot as an
+   **administrator** that can post messages.
+3. In the Worker: **Settings → Variables and secrets → Add**
+   - `TG_TOKEN` · type **Secret** · the BotFather token
+   - `TG_CHAT` · type **Text** · your channel username, e.g. `@jerebunow`
+4. Deploy. The first hourly run posts a "Haze right now" summary so you can see
+   it works; after that it posts at 7 am and when levels change.
+
 ## Free plan limits
 
 KV allows 1,000 writes and 100,000 reads a day. The Worker only writes when a

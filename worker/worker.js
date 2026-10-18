@@ -6,6 +6,10 @@
                         station crosses a level someone asked about
    - POST /hit          visitor check-in {id}; returns { live, total }
    - GET  /stats        { live, total } without checking in
+   - Telegram (optional) daily 7 am summary by state, plus a post when a
+                        state's worst reading crosses 100, 200 or 300.
+                        Needs TG_TOKEN (secret, from @BotFather) and TG_CHAT
+                        (e.g. @jerebunow) as variables.
    Needs one KV namespace bound as SUBS. Signing keys (VAPID) are created on
    first use and kept in KV, so there are no secrets to set up.
    Visitor counts need a D1 database bound as DB (tables are created
@@ -250,9 +254,128 @@ async function handle(req, env) {
   return json({ name: "JerebuNow alerts", ok: true }, 200, origin);
 }
 
+
+/* ---------- Telegram channel ----------
+   Daily summary at 7 am Malaysia time, and a post when a state's worst
+   station moves into a new band (101+, 201+, 301+) or back to 100 or below.
+   Going down needs a 10-point margin so a reading wobbling on a line doesn't
+   post every hour. Band per state is kept in KV under "tg:bands". */
+const TG_BANDS = [
+  { max: 50, dot: "🟢", ms: "Baik", en: "Good" },
+  { max: 100, dot: "🟡", ms: "Sederhana", en: "Moderate" },
+  { max: 200, dot: "🟠", ms: "Tidak sihat", en: "Unhealthy" },
+  { max: 300, dot: "🔴", ms: "Sangat tidak sihat", en: "Very unhealthy" },
+  { max: Infinity, dot: "🟣", ms: "Berbahaya", en: "Hazardous" }
+];
+const tgBand = (v) => TG_BANDS.find((b) => v <= b.max);
+const tgLevel = (v) => (v > 300 ? 3 : v > 200 ? 2 : v > 100 ? 1 : 0);   // alert levels
+const escTG = (s) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function worstByState(data) {
+  const states = new Map();
+  for (const [, s] of data) {
+    if (!s.state) continue;
+    const cur = states.get(s.state);
+    if (!cur || s.api > cur.api) states.set(s.state, { api: s.api, name: s.name });
+  }
+  return states;
+}
+
+async function tgSend(env, text) {
+  const res = await fetch(`https://api.telegram.org/bot${env.TG_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ chat_id: env.TG_CHAT, text, parse_mode: "HTML", disable_web_page_preview: true })
+  });
+  if (!res.ok) throw new Error("telegram " + res.status + " " + (await res.text()).slice(0, 200));
+  return res.status;
+}
+
+function myTime(date) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Kuala_Lumpur", hour: "numeric", hourCycle: "h23", weekday: "short", day: "numeric", month: "short"
+  }).formatToParts(date).map((p) => [p.type, p.value]));
+  return { hour: Number(parts.hour), label: new Intl.DateTimeFormat("ms-MY", { timeZone: "Asia/Kuala_Lumpur", weekday: "long", day: "numeric", month: "long" }).format(date) };
+}
+
+function tgSummary(states, now, morning) {
+  const rows = [...states].sort((a, b) => b[1].api - a[1].api);
+  const worst = rows[0];
+  const lines = rows.map(([state, w]) => `${tgBand(w.api).dot} <b>${w.api}</b>  ${escTG(state)} <i>(${escTG(w.name)})</i>`);
+  const unhealthy = rows.filter(([, w]) => w.api > 100).length;
+  const head = unhealthy
+    ? `⚠️ ${unhealthy} negeri tidak sihat · ${unhealthy} ${unhealthy === 1 ? "state" : "states"} unhealthy`
+    : `✅ Semua negeri baik atau sederhana · All states good or moderate`;
+  return [
+    morning ? `🌫️ <b>Jerebu pagi ini · Haze this morning</b>` : `🌫️ <b>Jerebu sekarang · Haze right now</b>`,
+    `${escTG(myTime(now).label)}`,
+    ``,
+    head,
+    ``,
+    ...lines,
+    ``,
+    `Bacaan tertinggi setiap negeri (IPU) · Worst reading per state (API)`,
+    worst && worst[1].api > 180 ? `🏫 IPU melebihi 180: semak pengumuman penutupan sekolah. API above 180: check school closure notices.` : null,
+    `📍 Lokasi anda · Your location: ${SITE}`
+  ].filter((l) => l !== null).join("\n");
+}
+
+function tgChange(state, w, from, to) {
+  const b = tgBand(w.api);
+  const up = to > from;
+  const icon = up ? (to >= 2 ? "🚨" : "⚠️") : "✅";
+  const ms = up ? `${b.ms} di ${escTG(state)}` : `Udara kembali sederhana di ${escTG(state)}`;
+  const en = up ? `${b.en} in ${escTG(state)}` : `Air back to moderate in ${escTG(state)}`;
+  const tip = up
+    ? (to >= 2 ? "Duduk di dalam rumah, pakai N95 jika keluar. Stay indoors, wear an N95 outside."
+               : "Hadkan aktiviti luar. Limit time outdoors.")
+    : "Sesuai berlari semula. OK to run again.";
+  return `${icon} <b>${ms}</b>\n${en}\n${b.dot} IPU/API <b>${w.api}</b> · ${escTG(w.name)}\n${tip}`;
+}
+
+async function telegram(env, data, now = new Date()) {
+  if (!env.TG_TOKEN || !env.TG_CHAT) return { skipped: "not_configured" };
+  // Don't post old readings (e.g. if the data job stopped)
+  if (data.updated && now - new Date(data.updated) > 3 * 3600 * 1000) return { skipped: "stale" };
+  const states = worstByState(data);
+  if (!states.size) return { skipped: "no_data" };
+  const out = { summary: false, changes: 0 };
+
+  // Changes since last hour
+  const saved = (await env.SUBS.get("tg:bands", "json")) || null;
+  const bands = {};
+  const changes = [];
+  for (const [state, w] of states) {
+    const prev = saved ? saved[state] : undefined;
+    // Up as soon as a line is crossed; down only once 10 points below it
+    const lvl = prev === undefined ? tgLevel(w.api) : Math.max(tgLevel(w.api), Math.min(prev, tgLevel(w.api + 10)));
+    bands[state] = lvl;
+    if (saved && prev !== undefined && lvl !== prev && (lvl > prev || lvl === 0)) changes.push(tgChange(state, w, prev, lvl));
+  }
+  const t = myTime(now);
+  const firstRun = !(await env.SUBS.get("tg:hello"));
+  if (t.hour === 7 || firstRun) {
+    const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur" }).format(now);   // Malaysian date
+    if ((await env.SUBS.get("tg:day")) !== day || firstRun) {
+      await tgSend(env, tgSummary(states, now, t.hour === 7));
+      await env.SUBS.put("tg:day", day);
+      if (firstRun) await env.SUBS.put("tg:hello", "1");
+      out.summary = true;
+    }
+  }
+  if (changes.length && !out.summary) {
+    await tgSend(env, changes.slice(0, 6).join("\n\n") + `\n\n📍 ${SITE}`);
+    out.changes = changes.length;
+  }
+  if (!saved || JSON.stringify(saved) !== JSON.stringify(bands)) await env.SUBS.put("tg:bands", JSON.stringify(bands));
+  return out;
+}
+
 /* ---------- hourly check ---------- */
 async function check(env) {
   const data = await readings();
+  let tg = null;
+  try { tg = await telegram(env, data); } catch (e) { tg = { error: String(e.message || e) }; }
   let cursor, sent = 0, removed = 0;
   do {
     const page = await env.SUBS.list({ prefix: "sub:", cursor });
@@ -283,7 +406,7 @@ async function check(env) {
     }
     cursor = page.list_complete ? null : page.cursor;
   } while (cursor);
-  return { sent, removed };
+  return { sent, removed, tg };
 }
 
 export default {

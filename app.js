@@ -111,6 +111,7 @@
     pol: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5" cy="9" r="2.5"/><circle cx="11" cy="6" r="3"/><circle cx="10" cy="12.5" r="1.5"/></svg>',
     trend: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 12 6 7.5l3 3 5.5-6"/><path d="M10.5 4.5h4v4"/></svg>',
     check: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="3"/><path d="m5 8.2 2 2L11 6"/></svg>',
+    pin: '<svg class="pin" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 15s5-4.6 5-8.6A5 5 0 0 0 3 6.4C3 10.4 8 15 8 15Z"/><circle cx="8" cy="6.5" r="1.8"/></svg>',
     warn: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.8 15 14H1Z"/><path d="M8 6.3v3.6M8 11.8v.2"/></svg>',
     share: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5v10M6.5 6 10 2.5 13.5 6"/><path d="M6 9H4.5v8.5h11V9H14"/></svg>'
   };
@@ -698,11 +699,22 @@
     const now = new Date();
     return state.warnings.filter((w) => {
       if (!w.to || myt(w.to) <= now) return false;
-      const all = [w.title_en, w.title_bm, w.heading_en, w.heading_bm, w.text_en, w.text_bm].join(" ").toLowerCase();
-      // Sea-area warnings (strong winds, rough seas) mention states too, but aren't about land
-      if (/\b(waters|perairan|laut|sea|seas|ombak|waves)\b/.test(all) && !/thunderstorm|ribut petir|rain|hujan/.test(all)) return false;
-      return words.some((x) => all.includes(x));
+      const head = [w.title_en, w.title_bm, w.heading_en, w.heading_bm].join(" ").toLowerCase();
+      const body = [w.text_en, w.text_bm].join(" ").toLowerCase();
+      // Sea-area warnings name states' waters ("waters of Selangor"), even when they
+      // mention thunderstorms; land warnings say "over the states of ..."
+      if (/\b(seas?|laut|waters|perairan|shipping|perkapalan|marin|marine)\b/.test(head)) return false;
+      if (/waters of|kawasan perairan|for shipping|untuk perkapalan/.test(body)) return false;
+      return words.some((x) => body.includes(x) || head.includes(x));
     });
+  }
+  // The part of a warning about this state, e.g. "Selangor (Hulu Selangor and Gombak)"
+  function warnPart(text, s) {
+    if (!text) return "";
+    const words = STATE_WORDS[s.state] || [s.state.toLowerCase()];
+    const list = text.replace(/^.*?\b(states? of|negeri)\s+/i, "").replace(/\s+(until|sehingga)\s+\d.*$/i, "");
+    const part = list.split(/\s*[•;]\s*/).find((p) => words.some((x) => p.toLowerCase().includes(x)));
+    return part && part.length < 300 ? part.replace(/^w\.?p\.?\s*/i, "").trim() : "";
   }
   function warnCard(s) {
     const list = warningsFor(s);
@@ -715,14 +727,19 @@
     };
     return `<section class="card warn" role="alert">
       <h2 class="card-head">${ICON.warn}${T.warnHead}</h2>
-      ${list.map((w) => `<div class="warn-item">
-        <p class="warn-title">${esc(pick(w, "title") || pick(w, "heading"))}</p>
-        ${pick(w, "heading") && pick(w, "title") ? `<p class="warn-heading">${esc(pick(w, "heading"))}</p>` : ""}
+      ${list.map((w) => {
+        const title = pick(w, "title") || pick(w, "heading");
+        const heading = pick(w, "heading");
+        const where = warnPart(pick(w, "text"), s);
+        const sub = where || (heading && heading.toLowerCase() !== title.toLowerCase() ? heading : "");
+        return `<div class="warn-item">
+        <p class="warn-title">${esc(title)}</p>
+        ${sub ? `<p class="warn-heading">${where ? ICON.pin : ""}${esc(sub)}</p>` : ""}
         <p class="warn-when">${esc(when(w))}</p>
         ${pick(w, "text") || pick(w, "instruction") ? `<details><summary>${T.warnMore}</summary>
           ${pick(w, "text") ? `<p>${esc(pick(w, "text"))}</p>` : ""}${pick(w, "instruction") ? `<p class="warn-do">${esc(pick(w, "instruction"))}</p>` : ""}
         </details>` : ""}
-      </div>`).join("")}
+      </div>`; }).join("")}
     </section>`;
   }
 

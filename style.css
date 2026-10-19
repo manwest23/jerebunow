@@ -871,3 +871,4 @@ body.list-open .toolbar > *, body.map-open .toolbar > * { pointer-events: none; 
 .card.warn details[open] summary::after { content: " ⌄"; }
 .card.warn details p { margin-top: 8px; font-size: 0.9412rem; line-height: 1.45; color: var(--ink-2); white-space: pre-line; }
 .card.warn .warn-do { color: var(--ink); }
+.warn-heading .pin { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.6; vertical-align: -2px; margin-right: 4px; }

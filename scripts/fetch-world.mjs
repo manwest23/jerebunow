@@ -28,6 +28,15 @@ async function key() {
 }
 
 async function main() {
+  // Runs can be started both by GitHub's schedule and by the Worker: don't spend
+  // IQAir calls twice in a row (free plan: 10,000 a month).
+  if (!process.env.FORCE) {
+    try {
+      const prev = JSON.parse(await readFile(OUT, "utf8"));
+      const mins = (Date.now() - new Date(prev.updated)) / 60000;
+      if (mins < 150) { console.log(`IQAir cities refreshed ${Math.round(mins)} min ago; skipping.`); return; }
+    } catch {}
+  }
   const k = await key();
   if (!k) { console.log("No IQAir key; skipping."); return; }
   let prev = { places: [] };

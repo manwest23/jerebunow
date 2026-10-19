@@ -24,6 +24,20 @@ to set.
 
 The bell button then appears in the app.
 
+## Hourly data on time (recommended)
+
+GitHub runs scheduled jobs late on small repos (often every 3 to 6 hours
+instead of hourly). The Worker's own hourly cron can start them on time:
+
+1. GitHub → **Settings → Developer settings → Personal access tokens →
+   Fine-grained tokens → Generate new token**. Repository access: **Only
+   select repositories → jerebunow**. Permissions: **Actions → Read and write**.
+2. In the Worker: **Settings → Variables and secrets → Add**, type **Secret**,
+   name `GH_TOKEN`, value the token. Deploy.
+
+The Worker then starts the DOE job every hour and the IQAir/fires job every
+3 hours. Without the token nothing changes.
+
 ## MET Malaysia warnings
 
 `GET /warnings` returns the weather warnings in force now from

@@ -159,12 +159,48 @@ function forecastKeyFor(station, groups) {
   return byState || null;
 }
 
+// DOE's server sometimes doesn't answer for a minute or two: try 3 times.
+async function fetchApims() {
+  let last;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const res = await fetch(APIMS_URL, {
+        headers: { "Accept": "application/json", "User-Agent": "JerebuNow/1.0 (+personal project)" },
+        signal: AbortSignal.timeout(30000)
+      });
+      if (!res.ok) throw new Error(`APIMS responded ${res.status}`);
+      const raw = await res.json();
+      if (!normalise(raw).length) throw new Error("No stations parsed. Run with DEBUG=1 and update FIELD.");
+      return raw;
+    } catch (e) {
+      last = e;
+      console.warn(`APIMS attempt ${attempt}: ${e.message}`);
+      if (attempt < 3) await new Promise((r) => setTimeout(r, attempt * 20000));
+    }
+  }
+  throw last;
+}
+
+// Only fail the job (and email) when the data is getting old, not for one missed hour.
+const STALE_HOURS = 4;
+async function dataAgeHours() {
+  try {
+    const prev = JSON.parse(await readFile(OUT, "utf8"));
+    return (Date.now() - new Date(prev.updated)) / 3600e3;
+  } catch { return Infinity; }
+}
+
 async function main() {
-  const res = await fetch(APIMS_URL, {
-    headers: { "Accept": "application/json", "User-Agent": "JerebuNow/1.0 (+personal project)" }
-  });
-  if (!res.ok) throw new Error(`APIMS responded ${res.status}`);
-  const raw = await res.json();
+  let raw;
+  try { raw = await fetchApims(); }
+  catch (e) {
+    const age = await dataAgeHours();
+    if (age < STALE_HOURS) {
+      console.warn(`DOE unavailable (${e.message}); keeping data from ${age.toFixed(1)} h ago.`);
+      return;
+    }
+    throw new Error(`DOE unavailable and data is ${age.toFixed(1)} h old: ${e.message}`);
+  }
 
   if (process.env.DEBUG) {
     const sample = raw.features?.[0]?.attributes ?? raw.data?.[0] ?? (Array.isArray(raw) ? raw[0] : raw);

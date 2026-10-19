@@ -8,6 +8,9 @@
    - GET  /stats        { live, total } without checking in
    - GET  /warnings     MET Malaysia weather warnings that are in force now
                         (from api.data.gov.my, cached 10 minutes)
+   - Cron also starts the GitHub data jobs on time (GitHub's own schedule can
+     run hours late on small repos). Optional: needs GH_TOKEN, a fine-grained
+     token for this repo with "Actions: read and write".
    - Telegram (optional) daily 7 am summary by state, plus a post when a
                         state's worst reading crosses 100, 200 or 300.
                         Needs TG_TOKEN (secret, from @BotFather) and TG_CHAT
@@ -426,6 +429,27 @@ async function telegram(env, data, now = new Date()) {
   return out;
 }
 
+
+/* ---------- start the GitHub data jobs on time ---------- */
+const GH_REPO = "manwest23/jerebunow";
+async function dispatch(env, workflow) {
+  const res = await fetch(`https://api.github.com/repos/${GH_REPO}/actions/workflows/${workflow}/dispatches`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${env.GH_TOKEN}`, accept: "application/vnd.github+json",
+      "x-github-api-version": "2022-11-28", "user-agent": "jerebunow-worker", "content-type": "application/json"
+    },
+    body: JSON.stringify({ ref: "main" })
+  });
+  return res.status;            // 204 = started
+}
+async function startJobs(env, when = new Date()) {
+  if (!env.GH_TOKEN) return { skipped: "no_token" };
+  const out = { api: await dispatch(env, "update-api.yml").catch((e) => String(e.message || e)) };
+  if (when.getUTCHours() % 3 === 0) out.world = await dispatch(env, "update-world.yml").catch((e) => String(e.message || e));
+  return out;
+}
+
 /* ---------- hourly check ---------- */
 async function check(env) {
   const data = await readings();
@@ -466,5 +490,8 @@ async function check(env) {
 
 export default {
   fetch: (req, env) => handle(req, env).catch((e) => json({ error: String(e.message || e) }, 500)),
-  scheduled: (event, env, ctx) => ctx.waitUntil(check(env))
+  scheduled: (event, env, ctx) => ctx.waitUntil(Promise.all([
+    check(env),
+    startJobs(env, new Date(event.scheduledTime || Date.now())).catch(() => {})
+  ]))
 };

@@ -646,7 +646,7 @@
     return h.length > 1 ? `H:${Math.max(...h)}  L:${Math.min(...h)}` : "";
   }
 
-  // Weather right now at a station, from MET's forecast for this part of the day
+  // Weather right now: live conditions, else MET's forecast for this part of the day
   // IQAir icon codes (OpenWeather style): 01 clear, 02 few clouds, 03/04 clouds,
   // 09 showers, 10 rain, 11 thunderstorm, 13 snow, 50 mist; "n" = night there
   const IC_KIND = { "01": "clear", "02": "cloud", "03": "cloud", "04": "cloud", "09": "rain", "10": "rain", "11": "storm", "13": "snow", "50": "haze" };
@@ -658,11 +658,56 @@
       return kind ? { kind, label: T.icLabels[code] || "", tp: w.tp } : null;
     }
     const fc = forecastFor(s);
-    if (!fc) return null;
-    const day = fc.days[todayIndex(fc.days)];
+    const day = fc ? fc.days[todayIndex(fc.days)] : null;
+    // Live conditions first (Open-Meteo, every 15 min); MET's forecast for this
+    // part of the day says what *may* happen, e.g. afternoon thunderstorms.
+    const now = nowFor(s);
+    if (now) return { kind: now.kind, label: T.icLabels[now.ic] || "", tp: now.tp, min: day?.min, max: day?.max, live: true };
     if (!day) return null;
     const raw = day[PERIOD_KEYS[periodIndexNow()]] || day.summary;
     return { ...weather(raw), min: day.min, max: day.max };
+  }
+
+  /* ---------- weather right now (Open-Meteo, no key) ---------- */
+  // WMO weather codes -> the same icon codes IQAir uses, so labels are shared
+  const wmoToIc = (c) => (c <= 1 ? "01" : c === 2 ? "02" : c === 3 ? "04" : c === 45 || c === 48 ? "50"
+    : c >= 95 ? "11" : (c >= 71 && c <= 77) || c === 85 || c === 86 ? "13" : (c >= 51 && c <= 57) || (c >= 80 && c <= 82) ? "09"
+    : c >= 61 && c <= 67 ? "10" : "03");
+  const NOW_TTL = 15 * 60 * 1000;
+  const nowWx = new Map();          // station id -> { ic, kind, tp, at }
+  let nowStamp = 0, nowBusy = false, nowFailAt = 0;
+  function nowFor(s) {
+    const n = s && nowWx.get(s.id);
+    return n && Date.now() - n.at < 3 * NOW_TTL ? n : null;      // keep a slightly old reading over none
+  }
+  async function loadNowWeather(list) {
+    if (nowBusy || Date.now() - nowFailAt < 5 * 60 * 1000) return;   // back off after a failure
+    const need = [];
+    for (const e of list) {
+      const s = e.s;
+      if (!s || isIQ(s) || !Number.isFinite(s.lat) || need.some((x) => x.id === s.id)) continue;
+      const n = nowWx.get(s.id);
+      if (!n || Date.now() - n.at > NOW_TTL) need.push(s);
+    }
+    if (!need.length) return;
+    nowBusy = true;
+    try {
+      const q = (k) => need.map((s) => s[k].toFixed(3)).join(",");
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${q("lat")}&longitude=${q("lon")}&current=temperature_2m,weather_code&timezone=auto`);
+      if (!res.ok) throw new Error(res.status);
+      let d = await res.json();
+      if (!Array.isArray(d)) d = [d];
+      let changed = false;
+      need.forEach((s, i) => {
+        const c = d[i] && d[i].current;
+        if (!c || !Number.isFinite(c.weather_code)) return;
+        const ic = wmoToIc(c.weather_code), tp = Math.round(c.temperature_2m), prev = nowWx.get(s.id);
+        if (!prev || prev.ic !== ic || prev.tp !== tp) changed = true;
+        nowWx.set(s.id, { ic, kind: IC_KIND[ic], tp, at: Date.now() });
+      });
+      if (changed) { nowStamp++; render(); }
+    } catch { nowFailAt = Date.now(); /* offline or blocked: MET's forecast is used instead */ }
+    finally { nowBusy = false; }
   }
   const hazeLevel = (api) => (api > 100 ? 2 : api > 50 ? 1 : 0);
   function fxFor(s, seed) {
@@ -743,7 +788,7 @@
     const list = entries();
     state.page = Math.max(0, Math.min(state.page, list.length - 1));
     // Skip rebuilding pages when nothing visible changed (keeps scroll smooth).
-    const key = JSON.stringify([state.dataStamp, state.iqStamp, state.lang, state.locating, list.map((e) => [e.kind, e.s?.id, e.d && Math.round(e.d * 10)]), isNight()]);
+    const key = JSON.stringify([state.dataStamp, state.iqStamp, nowStamp, state.lang, state.locating, list.map((e) => [e.kind, e.s?.id, e.d && Math.round(e.d * 10)]), isNight()]);
     const pager = $("pager");
     if (force || key !== lastPagesKey) {
       lastPagesKey = key;
@@ -761,6 +806,7 @@
         aria-label="${esc(e.kind === "me" ? T.myLocation : e.s?.name || e.place?.name || "")}">${e.kind === "me" ? ARROW : "<i></i>"}</button>`).join("");
     renderList(list);
     renderChrome();
+    loadNowWeather(list);
   }
 
   // Static labels outside the pages

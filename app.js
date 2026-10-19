@@ -846,13 +846,13 @@
           <p class="hero-meta">${esc(meta)}</p>
           <button class="share-btn" type="button" data-share="${i}">${ICON.share}${T.share}</button>
         </header>
-        ${warnCard(s)}
         ${e.kind === "me" ? glanceHTML() : ""}
         ${adviceCard(band)}
         ${todoCard(s, band)}
         ${runCard(s)}
         ${hoursCard(s)}
         ${weekCard(s)}
+        ${warnCard(s)}
         ${forecastCard(s)}
         ${tiles(s)}
         ${footer(s)}

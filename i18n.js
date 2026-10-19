@@ -26,6 +26,10 @@ window.JEREBU_I18N = {
     },
 
     healthAdvice: "Health advice",
+    warnHead: "MET Malaysia warning",
+    warnUntil: (t) => `In force until ${t}`,
+    warnFrom: (a, b) => `From ${a} until ${b}`,
+    warnMore: "Details",
     runningOutside: "Running outside",
     hourly: (n) => `Hourly API · last ${n} h`,
     historyNote: (n) => `History builds up hour by hour (${n} of 24 readings so far).`,
@@ -245,7 +249,7 @@ window.JEREBU_I18N = {
     visitors: (live, total) => `${live} online now · ${total} ${total === "1" ? "visitor" : "visitors"} in total`,
     visitorsLabel: "Visitors",
     pullToRefresh: "Pull to refresh",
-    privacy: "Your location stays on your phone. It is only sent to IQAir, rounded to about 1 km, when you're outside DOE coverage. Visitor counts use an anonymous random ID.",
+    privacy: "Your location stays on your phone. It is only sent, rounded to about 1 km, to Open-Meteo for the weather right now, and to IQAir when you're outside DOE coverage. Visitor counts use an anonymous random ID.",
     srReading: (v, u, label) => `${u} ${v}, ${label}`,
 
     // Alerts
@@ -297,6 +301,10 @@ window.JEREBU_I18N = {
     },
 
     healthAdvice: "Nasihat kesihatan",
+    warnHead: "Amaran MET Malaysia",
+    warnUntil: (t) => `Berkuat kuasa sehingga ${t}`,
+    warnFrom: (a, b) => `Dari ${a} sehingga ${b}`,
+    warnMore: "Butiran",
     runningOutside: "Berlari di luar",
     hourly: (n) => `IPU setiap jam · ${n} jam lalu`,
     historyNote: (n) => `Sejarah bacaan bertambah setiap jam (${n} daripada 24 bacaan setakat ini).`,
@@ -504,7 +512,7 @@ window.JEREBU_I18N = {
     visitors: (live, total) => `${live} dalam talian · ${total} pelawat keseluruhan`,
     visitorsLabel: "Pelawat",
     pullToRefresh: "Tarik untuk muat semula",
-    privacy: "Lokasi anda kekal dalam telefon anda. Ia hanya dihantar kepada IQAir, dibundarkan kira-kira 1 km, apabila anda di luar liputan JAS. Kiraan pelawat menggunakan ID rawak tanpa nama.",
+    privacy: "Lokasi anda kekal dalam telefon anda. Ia hanya dihantar, dibundarkan kira-kira 1 km, kepada Open-Meteo untuk cuaca semasa, dan kepada IQAir apabila anda di luar liputan JAS. Kiraan pelawat menggunakan ID rawak tanpa nama.",
     srReading: (v, u, label) => `${u} ${v}, ${label}`,
 
     alerts: "Amaran",

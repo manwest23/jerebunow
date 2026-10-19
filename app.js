@@ -111,6 +111,7 @@
     pol: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5" cy="9" r="2.5"/><circle cx="11" cy="6" r="3"/><circle cx="10" cy="12.5" r="1.5"/></svg>',
     trend: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 12 6 7.5l3 3 5.5-6"/><path d="M10.5 4.5h4v4"/></svg>',
     check: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="3"/><path d="m5 8.2 2 2L11 6"/></svg>',
+    warn: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.8 15 14H1Z"/><path d="M8 6.3v3.6M8 11.8v.2"/></svg>',
     share: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5v10M6.5 6 10 2.5 13.5 6"/><path d="M6 9H4.5v8.5h11V9H14"/></svg>'
   };
 
@@ -668,6 +669,63 @@
     return { ...weather(raw), min: day.min, max: day.max };
   }
 
+
+  /* ---------- MET Malaysia warnings (via the alerts Worker) ---------- */
+  // Warnings name states and districts in their text, so match on state names.
+  const STATE_WORDS = {
+    "Kuala Lumpur": ["kuala lumpur"], "Pulau Pinang": ["pulau pinang", "penang"], "Melaka": ["melaka", "malacca"],
+    "Negeri Sembilan": ["negeri sembilan"], "Putrajaya": ["putrajaya"], "Labuan": ["labuan"]
+  };
+  const myt = (t) => new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(t) ? t : t + "+08:00");
+  let warnStamp = "", warnAt = 0;
+  async function loadWarnings() {
+    const url = ((window.JEREBU_CONFIG && window.JEREBU_CONFIG.alertsUrl) || "").replace(/\/$/, "");
+    if (!url || Date.now() - warnAt < 10 * 60 * 1000) return;
+    warnAt = Date.now();
+    try {
+      const res = await fetch(url + "/warnings");
+      if (!res.ok) return;
+      const d = await res.json();
+      const list = Array.isArray(d.warnings) ? d.warnings : [];
+      const stamp = JSON.stringify(list.map((w) => [w.issued, w.to, w.title_en]));
+      state.warnings = list;
+      if (stamp !== warnStamp) { warnStamp = stamp; render(); }
+    } catch { /* no warnings shown */ }
+  }
+  function warningsFor(s) {
+    if (!s || isIQ(s) || !s.state || !Array.isArray(state.warnings)) return [];
+    const words = STATE_WORDS[s.state] || [s.state.toLowerCase()];
+    const now = new Date();
+    return state.warnings.filter((w) => {
+      if (!w.to || myt(w.to) <= now) return false;
+      const all = [w.title_en, w.title_bm, w.heading_en, w.heading_bm, w.text_en, w.text_bm].join(" ").toLowerCase();
+      // Sea-area warnings (strong winds, rough seas) mention states too, but aren't about land
+      if (/\b(waters|perairan|laut|sea|seas|ombak|waves)\b/.test(all) && !/thunderstorm|ribut petir|rain|hujan/.test(all)) return false;
+      return words.some((x) => all.includes(x));
+    });
+  }
+  function warnCard(s) {
+    const list = warningsFor(s);
+    if (!list.length) return "";
+    const ms = state.lang === "ms";
+    const pick = (w, k) => (ms ? w[k + "_bm"] || w[k + "_en"] : w[k + "_en"] || w[k + "_bm"]) || "";
+    const when = (w) => {
+      const a = myt(w.from), b = myt(w.to), now = new Date();
+      return Number.isFinite(+a) && a > now ? T.warnFrom(fmtTime(a), fmtTime(b)) : T.warnUntil(fmtTime(b));
+    };
+    return `<section class="card warn" role="alert">
+      <h2 class="card-head">${ICON.warn}${T.warnHead}</h2>
+      ${list.map((w) => `<div class="warn-item">
+        <p class="warn-title">${esc(pick(w, "title") || pick(w, "heading"))}</p>
+        ${pick(w, "heading") && pick(w, "title") ? `<p class="warn-heading">${esc(pick(w, "heading"))}</p>` : ""}
+        <p class="warn-when">${esc(when(w))}</p>
+        ${pick(w, "text") || pick(w, "instruction") ? `<details><summary>${T.warnMore}</summary>
+          ${pick(w, "text") ? `<p>${esc(pick(w, "text"))}</p>` : ""}${pick(w, "instruction") ? `<p class="warn-do">${esc(pick(w, "instruction"))}</p>` : ""}
+        </details>` : ""}
+      </div>`).join("")}
+    </section>`;
+  }
+
   /* ---------- weather right now (Open-Meteo, no key) ---------- */
   // WMO weather codes -> the same icon codes IQAir uses, so labels are shared
   const wmoToIc = (c) => (c <= 1 ? "01" : c === 2 ? "02" : c === 3 ? "04" : c === 45 || c === 48 ? "50"
@@ -686,13 +744,15 @@
     for (const e of list) {
       const s = e.s;
       if (!s || isIQ(s) || !Number.isFinite(s.lat) || need.some((x) => x.id === s.id)) continue;
+      // My Location: weather where the phone is, not at the station (can be a few km away)
+      const at = e.kind === "me" && state.coords ? state.coords : s;
       const n = nowWx.get(s.id);
-      if (!n || Date.now() - n.at > NOW_TTL) need.push(s);
+      if (!n || Date.now() - n.at > NOW_TTL || km(n, at) > 2) need.push({ id: s.id, lat: at.lat, lon: at.lon });
     }
     if (!need.length) return;
     nowBusy = true;
     try {
-      const q = (k) => need.map((s) => s[k].toFixed(3)).join(",");
+      const q = (k) => need.map((s) => s[k].toFixed(2)).join(",");     // ~1 km: enough for weather, kinder to privacy
       const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${q("lat")}&longitude=${q("lon")}&current=temperature_2m,weather_code&timezone=auto`);
       if (!res.ok) throw new Error(res.status);
       let d = await res.json();
@@ -703,7 +763,7 @@
         if (!c || !Number.isFinite(c.weather_code)) return;
         const ic = wmoToIc(c.weather_code), tp = Math.round(c.temperature_2m), prev = nowWx.get(s.id);
         if (!prev || prev.ic !== ic || prev.tp !== tp) changed = true;
-        nowWx.set(s.id, { ic, kind: IC_KIND[ic], tp, at: Date.now() });
+        nowWx.set(s.id, { ic, kind: IC_KIND[ic], tp, at: Date.now(), lat: s.lat, lon: s.lon });
       });
       if (changed) { nowStamp++; render(); }
     } catch { nowFailAt = Date.now(); /* offline or blocked: MET's forecast is used instead */ }
@@ -769,6 +829,7 @@
           <p class="hero-meta">${esc(meta)}</p>
           <button class="share-btn" type="button" data-share="${i}">${ICON.share}${T.share}</button>
         </header>
+        ${warnCard(s)}
         ${e.kind === "me" ? glanceHTML() : ""}
         ${adviceCard(band)}
         ${todoCard(s, band)}
@@ -788,7 +849,7 @@
     const list = entries();
     state.page = Math.max(0, Math.min(state.page, list.length - 1));
     // Skip rebuilding pages when nothing visible changed (keeps scroll smooth).
-    const key = JSON.stringify([state.dataStamp, state.iqStamp, nowStamp, state.lang, state.locating, list.map((e) => [e.kind, e.s?.id, e.d && Math.round(e.d * 10)]), isNight()]);
+    const key = JSON.stringify([state.dataStamp, state.iqStamp, nowStamp, warnStamp, state.lang, state.locating, list.map((e) => [e.kind, e.s?.id, e.d && Math.round(e.d * 10)]), isNight()]);
     const pager = $("pager");
     if (force || key !== lastPagesKey) {
       lastPagesKey = key;
@@ -807,6 +868,7 @@
     renderList(list);
     renderChrome();
     loadNowWeather(list);
+    loadWarnings();
   }
 
   // Static labels outside the pages

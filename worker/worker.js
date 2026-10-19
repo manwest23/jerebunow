@@ -6,6 +6,8 @@
                         station crosses a level someone asked about
    - POST /hit          visitor check-in {id}; returns { live, total }
    - GET  /stats        { live, total } without checking in
+   - GET  /warnings     MET Malaysia weather warnings that are in force now
+                        (from api.data.gov.my, cached 10 minutes)
    - Telegram (optional) daily 7 am summary by state, plus a post when a
                         state's worst reading crosses 100, 200 or 300.
                         Needs TG_TOKEN (secret, from @BotFather) and TG_CHAT
@@ -199,6 +201,53 @@ async function visitorStats(env, id) {
   return { live: Math.max(liveN, id ? 1 : 0), total: Math.max(totalN, liveN) };
 }
 
+
+/* ---------- MET Malaysia warnings ----------
+   api.data.gov.my has no location field, so the app matches each warning to a
+   page by the state names in its text. Times are Malaysia time without a zone. */
+const WARN_URL = "https://api.data.gov.my/weather/warning";
+const myt = (t) => (t && !/[zZ]|[+-]\d\d:?\d\d$/.test(t) ? new Date(t + "+08:00") : new Date(t));
+const mytStamp = (d) => new Date(d.getTime() + 8 * 3600e3).toISOString().slice(0, 19).replace("T", " ");
+async function metWarnings(now = new Date()) {
+  const get = async (q) => {
+    const r = await fetch(WARN_URL + q, { cf: { cacheTtl: 300 } });
+    if (!r.ok) throw new Error("warning " + r.status);
+    const d = await r.json();
+    if (!Array.isArray(d)) throw new Error("warning shape");
+    return d;
+  };
+  let rows;
+  try { rows = await get(`?limit=100&timestamp_start=${encodeURIComponent(mytStamp(now))}@valid_to`); }
+  catch { rows = await get("?limit=200"); }        // filter unsupported: filter here instead
+  const str = (v) => (typeof v === "string" ? v.trim().slice(0, 2000) : "");
+  const seen = new Set();
+  return rows
+    .filter((w) => w && myt(w.valid_to) > now)
+    .map((w) => ({
+      issued: str(w.warning_issue && w.warning_issue.issued), from: str(w.valid_from), to: str(w.valid_to),
+      title_en: str(w.warning_issue && w.warning_issue.title_en), title_bm: str(w.warning_issue && w.warning_issue.title_bm),
+      heading_en: str(w.heading_en), heading_bm: str(w.heading_bm),
+      text_en: str(w.text_en), text_bm: str(w.text_bm),
+      instruction_en: str(w.instruction_en), instruction_bm: str(w.instruction_bm)
+    }))
+    .filter((w) => { const k = w.title_en + w.from + w.text_en.slice(0, 80); if (seen.has(k)) return false; seen.add(k); return true; })
+    .sort((a, b) => myt(b.issued) - myt(a.issued))
+    .slice(0, 20);
+}
+async function warningsResponse(req, origin) {
+  const cache = caches.default;
+  const key = new Request("https://jerebunow-cache/warnings");
+  const hit = await cache.match(key);
+  if (hit) { const r = new Response(hit.body, hit); r.headers.set("access-control-allow-origin", origin); return r; }
+  let body;
+  try { body = { warnings: await metWarnings(), at: new Date().toISOString() }; }
+  catch (e) { return json({ warnings: [], error: "met_unavailable" }, 200, origin); }
+  const res = json(body, 200, origin);
+  res.headers.set("cache-control", "public, max-age=600");
+  await cache.put(key, res.clone());
+  return res;
+}
+
 /* ---------- HTTP ---------- */
 async function handle(req, env) {
   const url = new URL(req.url);
@@ -206,6 +255,7 @@ async function handle(req, env) {
   // Browser pre-check before a POST: an empty 204 (a 204 can't carry a body)
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(origin) });
   if (url.pathname === "/vapid") return json({ publicKey: (await vapid(env)).publicKey }, 200, origin);
+  if (url.pathname === "/warnings") return warningsResponse(req, origin);
 
   if (url.pathname === "/hit" || url.pathname === "/stats") {
     if (!env.DB) return json({ error: "no_db" }, 503, origin);

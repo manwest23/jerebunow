@@ -59,6 +59,8 @@ When conditions aren't good, it suggests the next dry window from the forecast.
 
 The 7-day forecast comes from MET Malaysia through the government open data API (`https://api.data.gov.my/weather/forecast`, no key needed). Each station uses a forecast location with the same name, otherwise its state. To pin a station to a specific district or town, add it to `FORECAST_OVERRIDES` in the script. DOE does not publish an API (haze) forecast, so the forecast covers weather only.
 
+Weather right now (the line under the reading and the sky animation) comes from Open-Meteo (`api.open-meteo.com`, no key), at the phone's location rounded to about 1 km for My Location and at the station for saved places. Official MET Malaysia warnings (thunderstorms, heavy rain) come from `api.data.gov.my/weather/warning` through the alerts Worker's `/warnings` route and show on pages in the states they name.
+
 ## Worldwide air quality (IQAir)
 
 DOE stations stay the source for Malaysia. For places DOE doesn't cover (searching any city in the world, or **My Location** when you're abroad or more than 50 km from a DOE station), JerebuNow uses IQAir's official API.

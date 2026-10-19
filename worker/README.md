@@ -24,6 +24,12 @@ to set.
 
 The bell button then appears in the app.
 
+## MET Malaysia warnings
+
+`GET /warnings` returns the weather warnings in force now from
+`api.data.gov.my/weather/warning`, cached for 10 minutes. Nothing to set up:
+just deploy the latest `worker.js`. Until then the app simply shows no warnings.
+
 ## Visitor counts (live and total)
 
 The footer's "online now" and "visitors in total" come from the same Worker.

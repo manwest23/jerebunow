@@ -1,11 +1,16 @@
 /* JerebuNow · IQAir client (official AirVisual API, Community plan).
    - nearest(lat, lon): air quality (US AQI) + weather for the nearest IQAir city
    - search(query): city search via Open-Meteo geocoding (free, no key)
-   Results are cached for 30 minutes and calls are spaced to stay within the
-   free plan's 5 calls per minute, shared across tabs on this device. */
+   Calls go through the JerebuNow Worker (/iq), which keeps the key secret and
+   shares each reading with everyone nearby for an hour. If the Worker isn't set
+   up, it falls back to calling IQAir directly with the key in config.js, spaced
+   to stay within the free plan's 5 calls per minute. Results are also cached on
+   this device for 30 minutes. */
 window.JerebuIQ = (() => {
   "use strict";
-  const KEY = (window.JEREBU_CONFIG && window.JEREBU_CONFIG.iqairKey || "").trim();
+  const CFG = window.JEREBU_CONFIG || {};
+  const KEY = (CFG.iqairKey || "").trim();
+  const PROXY = (CFG.iqairProxy || CFG.alertsUrl || "").replace(/\/$/, "");
   const API = "https://api.airvisual.com/v2/nearest_city";
   const GEO = "https://geocoding-api.open-meteo.com/v1/search";
   const TTL = 30 * 60 * 1000;
@@ -50,18 +55,31 @@ window.JerebuIQ = (() => {
 
   const inflight = new Map();
   /** Resolves { station, cached, stale } or { error: code } */
+  let proxyDown = false;
+  async function callIQ(lat, lon) {
+    // Rounded to ~1 km here; the Worker rounds further to its ~11 km shared squares
+    if (PROXY && !proxyDown) {
+      try {
+        const res = await fetch(`${PROXY}/iq?lat=${lat.toFixed(2)}&lon=${lon.toFixed(2)}`);
+        const body = await res.json().catch(() => null);
+        if (body && (body.status === "success" || (body.data && body.data.message !== "no_key"))) return { res, body };
+      } catch { /* fall back below */ }
+      proxyDown = true;                                     // Worker not set up: use the key directly
+    }
+    if (!KEY) return { res: { status: 0 }, body: { status: "fail", data: { message: "no_key" } } };
+    await slot();
+    const res = await fetch(`${API}?lat=${lat.toFixed(2)}&lon=${lon.toFixed(2)}&key=${encodeURIComponent(KEY)}`);
+    return { res, body: await res.json().catch(() => null) };
+  }
   function nearest(lat, lon) {
-    if (!KEY) return Promise.resolve({ error: "no_key" });
+    if (!KEY && !PROXY) return Promise.resolve({ error: "no_key" });
     const id = cell(lat, lon);
     const hit = ls.get(CACHE_PREFIX + id);
     if (hit && Date.now() - hit.t < TTL) return Promise.resolve({ station: hit.s, cached: true });
     if (inflight.has(id)) return inflight.get(id);
     const job = (async () => {
       try {
-        await slot();
-        // Send coordinates rounded to ~1 km, never the exact position
-        const res = await fetch(`${API}?lat=${lat.toFixed(2)}&lon=${lon.toFixed(2)}&key=${encodeURIComponent(KEY)}`);
-        const body = await res.json().catch(() => null);
+        const { res, body } = await callIQ(lat, lon);
         if (body && body.status === "success" && body.data) {
           const s = normalise(body.data, lat, lon);
           if (s.api == null) throw Object.assign(new Error(), { code: "no_data" });
@@ -90,5 +108,5 @@ window.JerebuIQ = (() => {
     }));
   }
 
-  return { enabled: !!KEY, nearest, search, cell };
+  return { enabled: !!(KEY || PROXY), nearest, search, cell };
 })();

@@ -38,6 +38,20 @@ instead of hourly). The Worker's own hourly cron can start them on time:
 The Worker then starts the DOE job every hour and the IQAir/fires job every
 3 hours. Without the token nothing changes.
 
+## Shared IQAir cache (recommended)
+
+The app asks the Worker (`/iq`) instead of calling IQAir itself. Everyone in the
+same ~11 km square shares one reading for an hour (stored in the SUBS KV), and
+if IQAir's limit is hit the last reading (up to 24 h) is shown instead. Your key
+is no longer visible in the app.
+
+1. In the Worker: **Settings → Variables and secrets → Add**, type **Secret**,
+   name `IQAIR_KEY`, value your IQAir API key. Deploy.
+2. Paste the latest `worker.js` and Deploy.
+3. Check `https://<your-worker>/iq?lat=18&lon=-76.8` returns `"status":"success"`.
+
+Until then the app falls back to calling IQAir directly with the key in `config.js`.
+
 ## MET Malaysia warnings
 
 `GET /warnings` returns the weather warnings in force now from

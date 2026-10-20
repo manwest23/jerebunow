@@ -6,6 +6,9 @@
                         station crosses a level someone asked about
    - POST /hit          visitor check-in {id}; returns { live, total }
    - GET  /stats        { live, total } without checking in
+   - GET  /iq?lat=&lon= IQAir nearest city, shared by everyone in the same ~11 km
+                        square for 1 hour (KV), so one call serves many users and
+                        the key stays secret. Needs IQAIR_KEY (secret).
    - GET  /warnings     MET Malaysia weather warnings that are in force now
                         (from api.data.gov.my, cached 10 minutes)
    - Cron also starts the GitHub data jobs on time (GitHub's own schedule can
@@ -251,6 +254,41 @@ async function warningsResponse(req, origin) {
   return res;
 }
 
+
+/* ---------- IQAir, shared cache ----------
+   Everyone in the same 0.1° square (~11 km) shares one reading for an hour.
+   Readings are kept for 24 h so a recent one can be shown if IQAir's limit
+   (5 calls a minute, 10,000 a month) is hit. Stored in KV: global, and about
+   one write per IQAir call. */
+const IQ_FRESH_MS = 60 * 60 * 1000;
+const iqInflight = new Map();
+async function iqNearest(env, lat, lon) {
+  if (!env.IQAIR_KEY) return { http: 503, body: { status: "fail", data: { message: "no_key" } } };
+  const clat = Math.round(lat * 10) / 10, clon = Math.round(lon * 10) / 10;
+  const kvKey = `iq:${clat.toFixed(1)},${clon.toFixed(1)}`;
+  const rec = await env.SUBS.get(kvKey, "json");
+  if (rec && Date.now() - rec.t < IQ_FRESH_MS) {
+    return { http: 200, body: { status: "success", data: rec.d, cached: true, age: Math.round((Date.now() - rec.t) / 60000) } };
+  }
+  if (iqInflight.has(kvKey)) return iqInflight.get(kvKey);
+  const job = (async () => {
+    let message = "network";
+    try {
+      const r = await fetch(`https://api.airvisual.com/v2/nearest_city?lat=${clat}&lon=${clon}&key=${encodeURIComponent(env.IQAIR_KEY)}`);
+      const b = await r.json().catch(() => null);
+      if (b && b.status === "success" && b.data && b.data.current && b.data.current.pollution) {
+        await env.SUBS.put(kvKey, JSON.stringify({ t: Date.now(), d: b.data }), { expirationTtl: 24 * 3600 });
+        return { http: 200, body: { status: "success", data: b.data, cached: false } };
+      }
+      message = (b && b.data && b.data.message) || `http_${r.status}`;
+    } catch { /* network */ }
+    if (rec) return { http: 200, body: { status: "success", data: rec.d, cached: true, stale: true, age: Math.round((Date.now() - rec.t) / 60000) } };
+    return { http: 502, body: { status: "fail", data: { message } } };
+  })().finally(() => iqInflight.delete(kvKey));
+  iqInflight.set(kvKey, job);
+  return job;
+}
+
 /* ---------- HTTP ---------- */
 async function handle(req, env) {
   const url = new URL(req.url);
@@ -259,6 +297,14 @@ async function handle(req, env) {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(origin) });
   if (url.pathname === "/vapid") return json({ publicKey: (await vapid(env)).publicKey }, 200, origin);
   if (url.pathname === "/warnings") return warningsResponse(req, origin);
+  if (url.pathname === "/iq") {
+    const lat = Number(url.searchParams.get("lat")), lon = Number(url.searchParams.get("lon"));
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return json({ status: "fail", data: { message: "bad_request" } }, 400, origin);
+    const r = await iqNearest(env, lat, lon);
+    const res = json(r.body, r.http, origin);
+    if (r.http === 200) res.headers.set("cache-control", "public, max-age=300");
+    return res;
+  }
 
   if (url.pathname === "/hit" || url.pathname === "/stats") {
     if (!env.DB) return json({ error: "no_db" }, 503, origin);

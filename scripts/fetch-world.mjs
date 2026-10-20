@@ -27,6 +27,14 @@ async function key() {
   return (cfg.match(/iqairKey:\s*"([^"]*)"/) || [])[1] || "";
 }
 
+async function proxyUrl() {
+  if (process.env.IQAIR_PROXY) return process.env.IQAIR_PROXY.replace(/\/$/, "");
+  try {
+    const cfg = await readFile(new URL("../config.js", import.meta.url), "utf8");
+    return ((cfg.match(/alertsUrl:\s*"([^"]*)"/) || [])[1] || "").replace(/\/$/, "");
+  } catch { return ""; }
+}
+
 async function main() {
   // Runs can be started both by GitHub's schedule and by the Worker: don't spend
   // IQAir calls twice in a row (free plan: 10,000 a month).
@@ -38,7 +46,9 @@ async function main() {
     } catch {}
   }
   const k = await key();
-  if (!k) { console.log("No IQAir key; skipping."); return; }
+  const proxy = await proxyUrl();                 // the Worker's shared IQAir cache, if set up
+  if (!k && !proxy) { console.log("No IQAir key or Worker; skipping."); return; }
+  let useProxy = !!proxy;
   let prev = { places: [] };
   try { prev = JSON.parse(await readFile(OUT, "utf8")); } catch {}
   const prevByName = new Map((prev.places || []).map((p) => [p.label, p]));
@@ -48,8 +58,16 @@ async function main() {
     const [label, lat, lon] = CITIES[i];
     if (i) await sleep(SPACING_MS);
     try {
-      const res = await fetch(`https://api.airvisual.com/v2/nearest_city?lat=${lat}&lon=${lon}&key=${encodeURIComponent(k)}`);
-      const body = await res.json();
+      let res, body;
+      if (useProxy) {
+        res = await fetch(`${proxy}/iq?lat=${lat}&lon=${lon}`);
+        body = await res.json().catch(() => null);
+        if (body?.data?.message === "no_key" && k) { useProxy = false; console.log("Worker has no IQAIR_KEY; calling IQAir directly."); }
+      }
+      if (!useProxy) {
+        res = await fetch(`https://api.airvisual.com/v2/nearest_city?lat=${lat}&lon=${lon}&key=${encodeURIComponent(k)}`);
+        body = await res.json();
+      }
       if (body.status !== "success") throw new Error(body?.data?.message || res.status);
       const d = body.data, p = d.current?.pollution || {}, w = d.current?.weather || {};
       const [clon, clat] = d.location?.coordinates || [lon, lat];

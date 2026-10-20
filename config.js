@@ -1,10 +1,11 @@
 /* JerebuNow settings.
-   iqairKey: a free IQAir "Community" API key (https://dashboard.iqair.com).
-   It powers places outside DOE's network. Leave empty to show DOE only.
-   A key in a website is visible to anyone, and all users share its quota
-   (5 calls/min, 10,000/month on the free plan); the app caches to save calls. */
+   IQAir (places outside DOE's network) is called through the Worker's /iq
+   route, which keeps the key secret and shares each reading nearby for an
+   hour. iqairKey is only a fallback for running without the Worker; a key
+   placed here is visible to anyone. */
 window.JEREBU_CONFIG = {
-  iqairKey: "5a9c1979-25bf-4ae1-9ad3-c0396cf3d001",
+  // IQAir goes through the Worker (/iq), which holds the key as a secret.
+  iqairKey: "",
   // Haze alerts: the URL of your Cloudflare Worker (see worker/README.md).
   // Leave empty to hide alerts.
   alertsUrl: "https://jerebunow-alerts.luqmanharriz23.workers.dev",

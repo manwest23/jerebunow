@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-27T23:43:06.987Z",
+  "updated": "2026-10-28T05:26:47.901Z",
   "source": "Air: DOE Malaysia APIMS (eqms.doe.gov.my). Forecast: MET Malaysia (api.data.gov.my)",
   "sample": false,
   "stations": [
@@ -9,11 +9,10 @@
       "state": "Perlis",
       "lat": 6.429928,
       "lon": 100.210937,
-      "api": 30,
+      "api": 24,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        52,
         48,
         38,
         38,
@@ -36,7 +35,8 @@
         31,
         31,
         29,
-        30
+        30,
+        24
       ],
       "forecastKey": "Kangar"
     },
@@ -46,11 +46,10 @@
       "state": "Kedah",
       "lat": 6.331608,
       "lon": 99.858461,
-      "api": 15,
-      "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "api": 13,
+      "pollutant": "Multiple",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        50,
         50,
         44,
         39,
@@ -73,7 +72,8 @@
         17,
         18,
         15,
-        15
+        15,
+        13
       ],
       "forecastKey": "Langkawi"
     },
@@ -85,9 +85,8 @@
       "lon": 100.346857,
       "api": 23,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        58,
         59,
         57,
         54,
@@ -110,6 +109,7 @@
         21,
         23,
         23,
+        23,
         23
       ],
       "forecastKey": "Kedah"
@@ -120,11 +120,10 @@
       "state": "Kedah",
       "lat": 5.629709,
       "lon": 100.46771,
-      "api": 38,
+      "api": 31,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        61,
         60,
         57,
         54,
@@ -147,7 +146,8 @@
         45,
         47,
         43,
-        38
+        38,
+        31
       ],
       "forecastKey": "Sungai Petani"
     },
@@ -157,11 +157,10 @@
       "state": "Kedah",
       "lat": 5.401634,
       "lon": 100.589653,
-      "api": 25,
+      "api": 21,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        63,
         63,
         62,
         58,
@@ -184,7 +183,8 @@
         32,
         31,
         28,
-        25
+        25,
+        21
       ],
       "forecastKey": "Kedah"
     },
@@ -194,11 +194,10 @@
       "state": "Pulau Pinang",
       "lat": 5.398419,
       "lon": 100.403976,
-      "api": 36,
+      "api": 34,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        64,
         65,
         62,
         61,
@@ -221,7 +220,8 @@
         41,
         45,
         40,
-        36
+        36,
+        34
       ],
       "forecastKey": "Pulau Pinang"
     },
@@ -231,11 +231,10 @@
       "state": "Pulau Pinang",
       "lat": 5.329421,
       "lon": 100.443457,
-      "api": 58,
+      "api": 65,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        76,
         77,
         70,
         72,
@@ -258,7 +257,8 @@
         63,
         65,
         61,
-        58
+        58,
+        65
       ],
       "forecastKey": "Pulau Pinang"
     },
@@ -268,11 +268,10 @@
       "state": "Pulau Pinang",
       "lat": 5.356226,
       "lon": 100.30794,
-      "api": 32,
+      "api": 26,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        63,
         66,
         62,
         60,
@@ -295,7 +294,8 @@
         36,
         36,
         33,
-        32
+        32,
+        26
       ],
       "forecastKey": "Pulau Pinang"
     },
@@ -305,11 +305,10 @@
       "state": "Pulau Pinang",
       "lat": 5.337128,
       "lon": 100.216642,
-      "api": 14,
+      "api": 15,
       "pollutant": "O3",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        59,
         59,
         56,
         53,
@@ -332,7 +331,8 @@
         17,
         22,
         18,
-        14
+        14,
+        15
       ],
       "forecastKey": "Balik Pulau"
     },
@@ -342,11 +342,10 @@
       "state": "Perak",
       "lat": 4.898865,
       "lon": 100.679133,
-      "api": 24,
+      "api": 22,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        66,
         66,
         64,
         55,
@@ -369,7 +368,8 @@
         27,
         23,
         21,
-        24
+        24,
+        22
       ],
       "forecastKey": "Taiping"
     },
@@ -379,11 +379,10 @@
       "state": "Perak",
       "lat": 4.629462,
       "lon": 101.116669,
-      "api": 60,
+      "api": 62,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        80,
         81,
         78,
         77,
@@ -406,7 +405,8 @@
         63,
         61,
         60,
-        60
+        60,
+        62
       ],
       "forecastKey": "Perak"
     },
@@ -416,11 +416,10 @@
       "state": "Perak",
       "lat": 4.553367,
       "lon": 101.080261,
-      "api": 50,
+      "api": 51,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        73,
         74,
         71,
         68,
@@ -443,7 +442,8 @@
         53,
         53,
         52,
-        50
+        50,
+        51
       ],
       "forecastKey": "Perak"
     },
@@ -455,9 +455,8 @@
       "lon": 100.663346,
       "api": 55,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        92,
         94,
         87,
         84,
@@ -480,6 +479,7 @@
         57,
         58,
         57,
+        55,
         55
       ],
       "forecastKey": "Perak"
@@ -490,11 +490,10 @@
       "state": "Perak",
       "lat": 3.687721,
       "lon": 101.524446,
-      "api": 41,
+      "api": 34,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        79,
         80,
         73,
         71,
@@ -517,7 +516,8 @@
         47,
         44,
         42,
-        41
+        41,
+        34
       ],
       "forecastKey": "Perak"
     },
@@ -527,11 +527,10 @@
       "state": "Kuala Lumpur",
       "lat": 3.212429,
       "lon": 101.682218,
-      "api": 87,
+      "api": 85,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        161,
         162,
         160,
         158,
@@ -554,7 +553,8 @@
         88,
         86,
         86,
-        87
+        87,
+        85
       ],
       "forecastKey": "WP Kuala Lumpur"
     },
@@ -564,11 +564,10 @@
       "state": "Kuala Lumpur",
       "lat": 3.10626,
       "lon": 101.717931,
-      "api": 58,
+      "api": 57,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        121,
         152,
         148,
         114,
@@ -591,7 +590,8 @@
         61,
         59,
         58,
-        58
+        58,
+        57
       ],
       "forecastKey": "Cheras"
     },
@@ -601,11 +601,10 @@
       "state": "Putrajaya",
       "lat": 2.915793,
       "lon": 101.690946,
-      "api": 58,
+      "api": 56,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        114,
         151,
         146,
         109,
@@ -628,7 +627,8 @@
         56,
         57,
         57,
-        58
+        58,
+        56
       ],
       "forecastKey": "Putrajaya"
     },
@@ -638,11 +638,10 @@
       "state": "Selangor",
       "lat": 3.321362,
       "lon": 101.256249,
-      "api": 41,
+      "api": 32,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        77,
         76,
         68,
         64,
@@ -665,7 +664,8 @@
         48,
         51,
         47,
-        41
+        41,
+        32
       ],
       "forecastKey": "Kuala Selangor"
     },
@@ -675,11 +675,10 @@
       "state": "Selangor",
       "lat": 3.130875,
       "lon": 101.60868,
-      "api": 54,
+      "api": 53,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        113,
         133,
         98,
         90,
@@ -702,7 +701,8 @@
         54,
         52,
         54,
-        54
+        54,
+        53
       ],
       "forecastKey": "Petaling Jaya"
     },
@@ -712,11 +712,10 @@
       "state": "Selangor",
       "lat": 3.10475,
       "lon": 101.556192,
-      "api": 62,
+      "api": 58,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        97,
         96,
         92,
         83,
@@ -739,7 +738,8 @@
         56,
         56,
         59,
-        62
+        62,
+        58
       ],
       "forecastKey": "Shah Alam"
     },
@@ -751,9 +751,8 @@
       "lon": 101.413136,
       "api": 59,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        147,
         121,
         102,
         91,
@@ -776,6 +775,7 @@
         59,
         59,
         59,
+        59,
         59
       ],
       "forecastKey": "Klang"
@@ -786,11 +786,10 @@
       "state": "Selangor",
       "lat": 2.816668,
       "lon": 101.623043,
-      "api": 54,
+      "api": 56,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        97,
         98,
         95,
         88,
@@ -813,7 +812,8 @@
         48,
         50,
         52,
-        54
+        54,
+        56
       ],
       "forecastKey": "Banting"
     },
@@ -823,11 +823,10 @@
       "state": "Negeri Sembilan",
       "lat": 2.821676,
       "lon": 101.81153,
-      "api": 60,
+      "api": 58,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        164,
         167,
         166,
         166,
@@ -850,7 +849,8 @@
         59,
         59,
         60,
-        60
+        60,
+        58
       ],
       "forecastKey": "Nilai"
     },
@@ -860,11 +860,10 @@
       "state": "Negeri Sembilan",
       "lat": 2.723441,
       "lon": 101.968395,
-      "api": 71,
+      "api": 67,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        166,
         169,
         170,
         171,
@@ -887,7 +886,8 @@
         71,
         71,
         71,
-        71
+        71,
+        67
       ],
       "forecastKey": "Seremban"
     },
@@ -897,11 +897,10 @@
       "state": "Negeri Sembilan",
       "lat": 2.441332,
       "lon": 101.866829,
-      "api": 53,
+      "api": 52,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        125,
         152,
         151,
         139,
@@ -924,7 +923,8 @@
         51,
         52,
         53,
-        53
+        53,
+        52
       ],
       "forecastKey": "Port Dickson"
     },
@@ -934,11 +934,10 @@
       "state": "Melaka",
       "lat": 2.37091,
       "lon": 102.223199,
-      "api": 64,
+      "api": 63,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        153,
         156,
         157,
         158,
@@ -961,7 +960,8 @@
         60,
         64,
         63,
-        64
+        64,
+        63
       ],
       "forecastKey": "Alor Gajah"
     },
@@ -973,9 +973,8 @@
       "lon": 102.193636,
       "api": 61,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        158,
         162,
         162,
         162,
@@ -998,6 +997,7 @@
         57,
         59,
         61,
+        61,
         61
       ],
       "forecastKey": "Melaka"
@@ -1010,9 +1010,8 @@
       "lon": 102.257066,
       "api": 65,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        160,
         163,
         163,
         159,
@@ -1035,6 +1034,7 @@
         54,
         57,
         64,
+        65,
         65
       ],
       "forecastKey": "Bandaraya Melaka"
@@ -1045,11 +1045,10 @@
       "state": "Johor",
       "lat": 2.49401,
       "lon": 102.863487,
-      "api": 67,
+      "api": 64,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        154,
         155,
         154,
         155,
@@ -1072,7 +1071,8 @@
         66,
         68,
         67,
-        67
+        67,
+        64
       ],
       "forecastKey": "Segamat"
     },
@@ -1082,11 +1082,10 @@
       "state": "Johor",
       "lat": 1.919098,
       "lon": 102.86584,
-      "api": 93,
+      "api": 88,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        161,
         162,
         165,
         166,
@@ -1109,7 +1108,8 @@
         85,
         91,
         92,
-        93
+        93,
+        88
       ],
       "forecastKey": "Batu Pahat"
     },
@@ -1119,11 +1119,10 @@
       "state": "Johor",
       "lat": 2.036936,
       "lon": 103.312179,
-      "api": 84,
+      "api": 83,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        155,
         158,
         162,
         164,
@@ -1146,7 +1145,8 @@
         87,
         89,
         86,
-        84
+        84,
+        83
       ],
       "forecastKey": "Kluang"
     },
@@ -1156,11 +1156,10 @@
       "state": "Johor",
       "lat": 1.494616,
       "lon": 103.735922,
-      "api": 81,
+      "api": 82,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        165,
         168,
         169,
         163,
@@ -1183,7 +1182,8 @@
         72,
         73,
         78,
-        81
+        81,
+        82
       ],
       "forecastKey": "Johor"
     },
@@ -1193,11 +1193,10 @@
       "state": "Johor",
       "lat": 1.470121,
       "lon": 103.89366,
-      "api": 82,
+      "api": 84,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        159,
         162,
         164,
         159,
@@ -1220,7 +1219,8 @@
         70,
         74,
         79,
-        82
+        82,
+        84
       ],
       "forecastKey": "Pasir Gudang"
     },
@@ -1230,11 +1230,10 @@
       "state": "Johor",
       "lat": 1.389999,
       "lon": 104.14956,
-      "api": 68,
+      "api": 70,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        154,
         156,
         157,
         154,
@@ -1257,7 +1256,8 @@
         57,
         62,
         65,
-        68
+        68,
+        70
       ],
       "forecastKey": "Johor"
     },
@@ -1267,11 +1267,10 @@
       "state": "Johor",
       "lat": 1.564027,
       "lon": 104.22533,
-      "api": 68,
+      "api": 73,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        93,
         98,
         141,
         152,
@@ -1294,7 +1293,8 @@
         55,
         60,
         63,
-        68
+        68,
+        73
       ],
       "forecastKey": "Kota Tinggi"
     },
@@ -1306,9 +1306,8 @@
       "lon": 103.419193,
       "api": 68,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        83,
         88,
         98,
         152,
@@ -1331,6 +1330,7 @@
         62,
         67,
         67,
+        68,
         68
       ],
       "forecastKey": "Rompin"
@@ -1341,11 +1341,10 @@
       "state": "Pahang",
       "lat": 3.470806,
       "lon": 102.378663,
-      "api": 49,
+      "api": 44,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        62,
         64,
         67,
         72,
@@ -1368,7 +1367,8 @@
         49,
         50,
         48,
-        49
+        49,
+        44
       ],
       "forecastKey": "Temerloh"
     },
@@ -1378,11 +1378,10 @@
       "state": "Pahang",
       "lat": 3.948312,
       "lon": 102.366683,
-      "api": 18,
+      "api": 19,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        66,
         64,
         63,
         62,
@@ -1405,7 +1404,8 @@
         28,
         29,
         18,
-        18
+        18,
+        19
       ],
       "forecastKey": "Jerantut"
     },
@@ -1415,11 +1415,10 @@
       "state": "Pahang",
       "lat": 3.819228,
       "lon": 103.296553,
-      "api": 45,
+      "api": 41,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        58,
         60,
         65,
         75,
@@ -1442,7 +1441,8 @@
         49,
         49,
         44,
-        45
+        45,
+        41
       ],
       "forecastKey": "Pahang"
     },
@@ -1452,11 +1452,10 @@
       "state": "Pahang",
       "lat": 3.960669,
       "lon": 103.382182,
-      "api": 66,
+      "api": 62,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        60,
         61,
         67,
         77,
@@ -1479,7 +1478,8 @@
         60,
         65,
         66,
-        66
+        66,
+        62
       ],
       "forecastKey": "Pahang"
     },
@@ -1489,11 +1489,10 @@
       "state": "Terengganu",
       "lat": 4.26215,
       "lon": 103.425839,
-      "api": 44,
+      "api": 51,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        57,
         59,
         65,
         73,
@@ -1516,7 +1515,8 @@
         41,
         43,
         42,
-        44
+        44,
+        51
       ],
       "forecastKey": "Kemaman"
     },
@@ -1526,11 +1526,10 @@
       "state": "Terengganu",
       "lat": 4.598131,
       "lon": 103.434793,
-      "api": 46,
+      "api": 43,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        86,
         85,
         91,
         99,
@@ -1553,7 +1552,8 @@
         39,
         44,
         44,
-        46
+        46,
+        43
       ],
       "forecastKey": "Paka"
     },
@@ -1563,11 +1563,10 @@
       "state": "Terengganu",
       "lat": 5.308144,
       "lon": 103.120435,
-      "api": 41,
+      "api": 39,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        48,
         44,
         36,
         48,
@@ -1590,7 +1589,8 @@
         41,
         39,
         41,
-        41
+        41,
+        39
       ],
       "forecastKey": "Kuala Terengganu"
     },
@@ -1600,11 +1600,10 @@
       "state": "Terengganu",
       "lat": 5.743342,
       "lon": 102.513478,
-      "api": 26,
+      "api": 25,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        27,
         25,
         26,
         32,
@@ -1627,7 +1626,8 @@
         36,
         29,
         27,
-        26
+        26,
+        25
       ],
       "forecastKey": "Besut"
     },
@@ -1637,11 +1637,10 @@
       "state": "Kelantan",
       "lat": 5.811251,
       "lon": 102.134517,
-      "api": 27,
+      "api": 25,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        49,
         39,
         31,
         32,
@@ -1664,7 +1663,8 @@
         51,
         43,
         31,
-        27
+        27,
+        25
       ],
       "forecastKey": "Tanah Merah"
     },
@@ -1674,11 +1674,10 @@
       "state": "Kelantan",
       "lat": 6.147439,
       "lon": 102.249233,
-      "api": 27,
+      "api": 25,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        52,
         45,
         39,
         44,
@@ -1701,7 +1700,8 @@
         46,
         38,
         32,
-        27
+        27,
+        25
       ],
       "forecastKey": "Kota Bharu"
     },
@@ -1711,11 +1711,10 @@
       "state": "Sabah",
       "lat": 4.249853,
       "lon": 117.935858,
-      "api": 56,
+      "api": 55,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        71,
         71,
         73,
         74,
@@ -1738,7 +1737,8 @@
         63,
         59,
         56,
-        56
+        56,
+        55
       ],
       "forecastKey": "Tawau"
     },
@@ -1750,9 +1750,8 @@
       "lon": 118.091062,
       "api": 56,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        59,
         60,
         59,
         60,
@@ -1775,6 +1774,7 @@
         56,
         56,
         57,
+        56,
         56
       ],
       "forecastKey": "Sandakan"
@@ -1785,11 +1785,10 @@
       "state": "Sabah",
       "lat": 5.879672,
       "lon": 116.056388,
-      "api": 42,
+      "api": 38,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        68,
         71,
         77,
         80,
@@ -1812,7 +1811,8 @@
         47,
         46,
         42,
-        42
+        42,
+        38
       ],
       "forecastKey": "Kota Kinabalu"
     },
@@ -1822,11 +1822,10 @@
       "state": "Sabah",
       "lat": 5.597719,
       "lon": 115.88833,
-      "api": 47,
+      "api": 44,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        66,
         70,
         77,
         81,
@@ -1849,7 +1848,8 @@
         47,
         49,
         46,
-        47
+        47,
+        44
       ],
       "forecastKey": "Sabah"
     },
@@ -1859,11 +1859,10 @@
       "state": "Sabah",
       "lat": 5.339426,
       "lon": 116.163683,
-      "api": 66,
+      "api": 61,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        88,
         92,
         95,
         94,
@@ -1886,7 +1885,8 @@
         76,
         69,
         68,
-        66
+        66,
+        61
       ],
       "forecastKey": "Keningau"
     },
@@ -1896,11 +1896,10 @@
       "state": "Labuan",
       "lat": 5.298106,
       "lon": 115.232276,
-      "api": 48,
+      "api": 45,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        81,
         83,
         81,
         81,
@@ -1923,7 +1922,8 @@
         57,
         52,
         51,
-        48
+        48,
+        45
       ],
       "forecastKey": "Labuan"
     },
@@ -1933,11 +1933,10 @@
       "state": "Sarawak",
       "lat": 4.758824,
       "lon": 115.01366,
-      "api": 57,
+      "api": 55,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        73,
         75,
         79,
         79,
@@ -1960,7 +1959,8 @@
         54,
         53,
         56,
-        57
+        57,
+        55
       ],
       "forecastKey": "Limbang"
     },
@@ -1970,11 +1970,10 @@
       "state": "Sarawak",
       "lat": 4.49474,
       "lon": 114.043375,
-      "api": 49,
+      "api": 45,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        69,
         71,
         69,
         65,
@@ -1997,7 +1996,8 @@
         55,
         54,
         52,
-        49
+        49,
+        45
       ],
       "forecastKey": "Sarawak"
     },
@@ -2009,9 +2009,8 @@
       "lon": 114.012368,
       "api": 58,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        74,
         75,
         79,
         73,
@@ -2034,6 +2033,7 @@
         59,
         58,
         59,
+        58,
         58
       ],
       "forecastKey": "Miri"
@@ -2046,9 +2046,8 @@
       "lon": 113.325812,
       "api": 76,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        86,
         86,
         88,
         84,
@@ -2071,6 +2070,7 @@
         118,
         90,
         81,
+        76,
         76
       ],
       "forecastKey": "Sarawak"
@@ -2081,11 +2081,10 @@
       "state": "Sarawak",
       "lat": 3.177155,
       "lon": 113.041171,
-      "api": 70,
+      "api": 66,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        90,
         87,
         88,
         88,
@@ -2108,7 +2107,8 @@
         93,
         76,
         72,
-        70
+        70,
+        66
       ],
       "forecastKey": "Bintulu"
     },
@@ -2118,11 +2118,10 @@
       "state": "Sarawak",
       "lat": 2.870617,
       "lon": 112.019994,
-      "api": 58,
+      "api": 56,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        72,
         74,
         78,
         76,
@@ -2145,7 +2144,8 @@
         63,
         61,
         61,
-        58
+        58,
+        56
       ],
       "forecastKey": "Mukah"
     },
@@ -2155,11 +2155,10 @@
       "state": "Sarawak",
       "lat": 2.014548,
       "lon": 112.927323,
-      "api": 59,
+      "api": 60,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        134,
         151,
         153,
         152,
@@ -2182,7 +2181,8 @@
         65,
         60,
         59,
-        59
+        59,
+        60
       ],
       "forecastKey": "Kapit"
     },
@@ -2192,11 +2192,10 @@
       "state": "Sarawak",
       "lat": 2.314322,
       "lon": 111.831933,
-      "api": 64,
+      "api": 61,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        85,
         85,
         88,
         89,
@@ -2219,7 +2218,8 @@
         75,
         68,
         65,
-        64
+        64,
+        61
       ],
       "forecastKey": "Sibu"
     },
@@ -2229,11 +2229,10 @@
       "state": "Sarawak",
       "lat": 2.132909,
       "lon": 111.522885,
-      "api": 60,
+      "api": 59,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        78,
         76,
         78,
         78,
@@ -2256,7 +2255,8 @@
         70,
         63,
         59,
-        60
+        60,
+        59
       ],
       "forecastKey": "Sarikei"
     },
@@ -2266,11 +2266,10 @@
       "state": "Sarawak",
       "lat": 1.219718,
       "lon": 111.464871,
-      "api": 74,
+      "api": 73,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        152,
         152,
         154,
         159,
@@ -2293,7 +2292,8 @@
         77,
         72,
         73,
-        74
+        74,
+        73
       ],
       "forecastKey": "Sri Aman"
     },
@@ -2303,11 +2303,10 @@
       "state": "Sarawak",
       "lat": 1.454806,
       "lon": 110.491506,
-      "api": 70,
+      "api": 65,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        79,
         83,
         99,
         157,
@@ -2330,7 +2329,8 @@
         78,
         73,
         72,
-        70
+        70,
+        65
       ],
       "forecastKey": "Samarahan"
     },
@@ -2340,11 +2340,10 @@
       "state": "Sarawak",
       "lat": 1.562167,
       "lon": 110.388916,
-      "api": 70,
+      "api": 66,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        90,
         93,
         152,
         159,
@@ -2367,7 +2366,8 @@
         75,
         74,
         73,
-        70
+        70,
+        66
       ],
       "forecastKey": "Kuching"
     },
@@ -2377,11 +2377,10 @@
       "state": "Johor",
       "lat": 2.295748,
       "lon": 102.571313,
-      "api": 75,
+      "api": 71,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        160,
         161,
         162,
         162,
@@ -2404,7 +2403,8 @@
         68,
         72,
         73,
-        75
+        75,
+        71
       ],
       "forecastKey": "Tangkak"
     },
@@ -2414,11 +2414,10 @@
       "state": "Selangor",
       "lat": 2.978644,
       "lon": 101.490107,
-      "api": 62,
+      "api": 58,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        109,
         99,
         97,
         93,
@@ -2441,7 +2440,8 @@
         69,
         65,
         60,
-        62
+        62,
+        58
       ],
       "forecastKey": "Selangor"
     },
@@ -2451,11 +2451,10 @@
       "state": "Sarawak",
       "lat": 1.17247,
       "lon": 110.56807,
-      "api": 67,
+      "api": 63,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        135,
         153,
         156,
         166,
@@ -2478,7 +2477,8 @@
         82,
         73,
         71,
-        67
+        67,
+        63
       ],
       "forecastKey": "Sarawak"
     },
@@ -2490,9 +2490,8 @@
       "lon": 116.166392,
       "api": 54,
       "pollutant": "PM2.5",
-      "readingTime": "2026-10-28T07:00:00",
+      "readingTime": "2026-10-28T13:00:00",
       "history": [
-        69,
         72,
         80,
         83,
@@ -2515,6 +2514,7 @@
         56,
         57,
         55,
+        54,
         54
       ],
       "forecastKey": "Sabah"
@@ -2990,11 +2990,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Ribut petir",
+          "morning": "Tiada Hujan",
           "afternoon": "Tiada Hujan",
           "night": "Tiada Hujan",
-          "summary": "Ribut petir",
-          "summary_when": "Pagi",
+          "summary": "Tiada Hujan",
+          "summary_when": "Sepanjang Hari",
           "min": 24,
           "max": 34
         },
@@ -3067,11 +3067,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Ribut petir di beberapa tempat",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir di beberapa tempat di kawasan pedalaman",
           "night": "Hujan di beberapa tempat di kawasan pedalaman",
-          "summary": "Ribut petir di beberapa tempat",
-          "summary_when": "Sepanjang Hari",
+          "summary": "Ribut petir di beberapa tempat di kawasan pedalaman",
+          "summary_when": "Petang dan Malam",
           "min": 24,
           "max": 34
         },
@@ -3144,11 +3144,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Hujan di beberapa tempat",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir di beberapa tempat",
           "night": "Tiada Hujan",
           "summary": "Ribut petir di beberapa tempat",
-          "summary_when": "Pagi dan Petang",
+          "summary_when": "Petang",
           "min": 24,
           "max": 33
         },
@@ -3221,11 +3221,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Hujan",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir",
           "night": "Tiada Hujan",
           "summary": "Ribut petir",
-          "summary_when": "Pagi dan Petang",
+          "summary_when": "Petang",
           "min": 24,
           "max": 33
         },
@@ -3298,11 +3298,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Hujan di kebanyakan tempat",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir di beberapa tempat",
           "night": "Tiada Hujan",
           "summary": "Ribut petir di beberapa tempat",
-          "summary_when": "Pagi dan Petang",
+          "summary_when": "Petang",
           "min": 23,
           "max": 33
         },
@@ -3375,11 +3375,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Ribut petir di beberapa tempat",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir di beberapa tempat",
           "night": "Tiada Hujan",
           "summary": "Ribut petir di beberapa tempat",
-          "summary_when": "Pagi dan Petang",
+          "summary_when": "Petang",
           "min": 24,
           "max": 32
         },
@@ -3452,11 +3452,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Hujan",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir",
           "night": "Tiada Hujan",
           "summary": "Ribut petir",
-          "summary_when": "Pagi dan Petang",
+          "summary_when": "Petang",
           "min": 24,
           "max": 33
         },
@@ -3529,11 +3529,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Hujan",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir",
           "night": "Tiada Hujan",
           "summary": "Ribut petir",
-          "summary_when": "Pagi dan Petang",
+          "summary_when": "Petang",
           "min": 24,
           "max": 33
         },
@@ -3606,11 +3606,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Ribut petir di beberapa tempat",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir di beberapa tempat",
           "night": "Tiada Hujan",
           "summary": "Ribut petir di beberapa tempat",
-          "summary_when": "Pagi dan Petang",
+          "summary_when": "Petang",
           "min": 24,
           "max": 32
         },
@@ -3683,11 +3683,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Ribut petir",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir",
           "night": "Tiada Hujan",
           "summary": "Ribut petir",
-          "summary_when": "Pagi dan Petang",
+          "summary_when": "Petang",
           "min": 24,
           "max": 33
         },
@@ -3760,11 +3760,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Hujan",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir",
           "night": "Tiada Hujan",
           "summary": "Ribut petir",
-          "summary_when": "Pagi dan Petang",
+          "summary_when": "Petang",
           "min": 24,
           "max": 33
         },
@@ -3837,11 +3837,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Hujan di beberapa tempat",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir di beberapa tempat",
           "night": "Tiada Hujan",
           "summary": "Ribut petir di beberapa tempat",
-          "summary_when": "Pagi dan Petang",
+          "summary_when": "Petang",
           "min": 23,
           "max": 33
         },
@@ -3914,11 +3914,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Ribut petir di beberapa tempat",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir di beberapa tempat",
           "night": "Tiada Hujan",
           "summary": "Ribut petir di beberapa tempat",
-          "summary_when": "Pagi dan Petang",
+          "summary_when": "Petang",
           "min": 23,
           "max": 33
         },
@@ -3991,11 +3991,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Ribut petir di beberapa tempat",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir di beberapa tempat",
           "night": "Tiada Hujan",
           "summary": "Ribut petir di beberapa tempat",
-          "summary_when": "Pagi dan Petang",
+          "summary_when": "Petang",
           "min": 23,
           "max": 32
         },
@@ -4068,11 +4068,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Ribut petir di beberapa tempat di kawasan pedalaman",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir di beberapa tempat di kawasan pedalaman",
           "night": "Tiada Hujan",
           "summary": "Ribut petir di beberapa tempat di kawasan pedalaman",
-          "summary_when": "Pagi dan Petang",
+          "summary_when": "Petang",
           "min": 24,
           "max": 33
         },
@@ -4145,11 +4145,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Ribut petir",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir",
           "night": "Tiada Hujan",
           "summary": "Ribut petir",
-          "summary_when": "Pagi dan Petang",
+          "summary_when": "Petang",
           "min": 24,
           "max": 33
         },
@@ -4998,7 +4998,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-10-29",
@@ -5008,7 +5008,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-10-30",
@@ -5018,7 +5018,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-10-31",
@@ -5028,7 +5028,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-01",
@@ -5038,7 +5038,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-02",
@@ -5048,7 +5048,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-03",
@@ -5058,7 +5058,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         }
       ]
     },
@@ -5075,7 +5075,7 @@
           "summary": "Ribut petir",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-10-29",
@@ -5085,7 +5085,7 @@
           "summary": "Ribut petir",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-10-30",
@@ -5095,7 +5095,7 @@
           "summary": "Ribut petir",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-10-31",
@@ -5105,7 +5105,7 @@
           "summary": "Ribut petir",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-01",
@@ -5115,7 +5115,7 @@
           "summary": "Ribut petir",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-02",
@@ -5125,7 +5125,7 @@
           "summary": "Ribut petir",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-03",
@@ -5135,7 +5135,7 @@
           "summary": "Ribut petir",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         }
       ]
     },
@@ -5162,7 +5162,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-10-30",
@@ -5172,7 +5172,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-10-31",
@@ -5182,7 +5182,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-01",
@@ -5192,7 +5192,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-02",
@@ -5202,7 +5202,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-03",
@@ -5212,7 +5212,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         }
       ]
     },
@@ -5239,7 +5239,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-10-30",
@@ -5249,7 +5249,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-10-31",
@@ -5259,7 +5259,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-01",
@@ -5269,7 +5269,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-02",
@@ -5279,7 +5279,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-03",
@@ -5289,7 +5289,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         }
       ]
     },
@@ -5306,7 +5306,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-10-29",
@@ -5316,7 +5316,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-10-30",
@@ -5326,7 +5326,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-10-31",
@@ -5336,7 +5336,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-01",
@@ -5346,7 +5346,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-02",
@@ -5356,7 +5356,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-03",
@@ -5366,7 +5366,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         }
       ]
     },
@@ -5393,7 +5393,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-10-30",
@@ -5403,7 +5403,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-10-31",
@@ -5413,7 +5413,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-01",
@@ -5423,7 +5423,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-02",
@@ -5433,7 +5433,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         },
         {
           "date": "2026-11-03",
@@ -5443,7 +5443,7 @@
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 23,
-          "max": 33
+          "max": 32
         }
       ]
     },
@@ -5454,31 +5454,31 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Hujan di beberapa tempat",
-          "afternoon": "Hujan di beberapa tempat",
-          "night": "Tiada Hujan",
-          "summary": "Hujan di beberapa tempat",
-          "summary_when": "Pagi dan Petang",
-          "min": 25,
-          "max": 32
-        },
-        {
-          "date": "2026-10-29",
-          "morning": "Hujan di beberapa tempat",
-          "afternoon": "Hujan di beberapa tempat",
-          "night": "Tiada Hujan",
-          "summary": "Hujan di beberapa tempat",
-          "summary_when": "Pagi dan Petang",
-          "min": 25,
-          "max": 32
-        },
-        {
-          "date": "2026-10-30",
           "morning": "Tiada Hujan",
           "afternoon": "Hujan di beberapa tempat",
           "night": "Tiada Hujan",
           "summary": "Hujan di beberapa tempat",
           "summary_when": "Petang",
+          "min": 25,
+          "max": 32
+        },
+        {
+          "date": "2026-10-29",
+          "morning": "Tiada Hujan",
+          "afternoon": "Ribut petir di beberapa tempat",
+          "night": "Tiada Hujan",
+          "summary": "Ribut petir di beberapa tempat",
+          "summary_when": "Petang",
+          "min": 25,
+          "max": 32
+        },
+        {
+          "date": "2026-10-30",
+          "morning": "Hujan di beberapa tempat",
+          "afternoon": "Hujan di beberapa tempat",
+          "night": "Tiada Hujan",
+          "summary": "Hujan di beberapa tempat",
+          "summary_when": "Pagi dan Petang",
           "min": 25,
           "max": 32
         },
@@ -5531,21 +5531,21 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Hujan di kebanyakan tempat",
+          "morning": "Hujan di beberapa tempat",
           "afternoon": "Hujan di beberapa tempat",
           "night": "Tiada Hujan",
-          "summary": "Hujan di kebanyakan tempat",
+          "summary": "Hujan di beberapa tempat",
           "summary_when": "Pagi dan Petang",
           "min": 25,
           "max": 33
         },
         {
           "date": "2026-10-29",
-          "morning": "Tiada Hujan",
-          "afternoon": "Hujan di beberapa tempat",
+          "morning": "Hujan di beberapa tempat",
+          "afternoon": "Tiada Hujan",
           "night": "Tiada Hujan",
           "summary": "Hujan di beberapa tempat",
-          "summary_when": "Petang",
+          "summary_when": "Pagi",
           "min": 25,
           "max": 33
         },
@@ -5608,11 +5608,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Berangin",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir di beberapa tempat",
           "night": "Berangin",
           "summary": "Ribut petir di beberapa tempat",
-          "summary_when": "Sepanjang Hari",
+          "summary_when": "Petang dan Malam",
           "min": 25,
           "max": 33
         },
@@ -5669,9 +5669,9 @@
         {
           "date": "2026-11-03",
           "morning": "Tiada Hujan",
-          "afternoon": "Hujan di beberapa tempat",
+          "afternoon": "Ribut petir di beberapa tempat",
           "night": "Tiada Hujan",
-          "summary": "Hujan di beberapa tempat",
+          "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang",
           "min": 25,
           "max": 33
@@ -5697,7 +5697,7 @@
           "date": "2026-10-29",
           "morning": "Hujan di beberapa tempat",
           "afternoon": "Ribut petir di beberapa tempat di kawasan pedalaman",
-          "night": "Hujan di beberapa tempat di kawasan pedalaman",
+          "night": "Ribut petir di beberapa tempat di kawasan pedalaman",
           "summary": "Ribut petir di beberapa tempat di kawasan pedalaman",
           "summary_when": "Sepanjang Hari",
           "min": 22,
@@ -5747,7 +5747,7 @@
           "date": "2026-11-03",
           "morning": "Hujan di beberapa tempat",
           "afternoon": "Ribut petir di beberapa tempat",
-          "night": "Hujan di beberapa tempat di kawasan pedalaman",
+          "night": "Ribut petir di beberapa tempat di kawasan pedalaman",
           "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Sepanjang Hari",
           "min": 22,
@@ -5823,9 +5823,9 @@
         {
           "date": "2026-11-03",
           "morning": "Tiada Hujan",
-          "afternoon": "Ribut petir di kebanyakan tempat",
+          "afternoon": "Ribut petir di beberapa tempat",
           "night": "Hujan di beberapa tempat",
-          "summary": "Ribut petir di kebanyakan tempat",
+          "summary": "Ribut petir di beberapa tempat",
           "summary_when": "Petang dan Malam",
           "min": 22,
           "max": 32
@@ -5901,9 +5901,9 @@
           "date": "2026-11-03",
           "morning": "Hujan di kebanyakan tempat",
           "afternoon": "Tiada Hujan",
-          "night": "Tiada Hujan",
+          "night": "Hujan di kebanyakan tempat",
           "summary": "Hujan di kebanyakan tempat",
-          "summary_when": "Pagi",
+          "summary_when": "Pagi dan Malam",
           "min": 25,
           "max": 32
         }
@@ -6609,10 +6609,10 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Ribut petir di beberapa tempat",
+          "morning": "Hujan di beberapa tempat",
           "afternoon": "Tiada Hujan",
           "night": "Hujan di beberapa tempat",
-          "summary": "Ribut petir di beberapa tempat",
+          "summary": "Hujan di beberapa tempat",
           "summary_when": "Pagi dan Malam",
           "min": 24,
           "max": 34
@@ -6686,7 +6686,7 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Ribut petir di beberapa tempat",
+          "morning": "Hujan di beberapa tempat",
           "afternoon": "Ribut petir di beberapa tempat",
           "night": "Hujan di beberapa tempat",
           "summary": "Ribut petir di beberapa tempat",
@@ -6840,11 +6840,11 @@
       "days": [
         {
           "date": "2026-10-28",
-          "morning": "Ribut petir di beberapa tempat di kawasan pedalaman",
+          "morning": "Tiada Hujan",
           "afternoon": "Ribut petir di beberapa tempat di kawasan pedalaman",
           "night": "Tiada Hujan",
           "summary": "Ribut petir di beberapa tempat di kawasan pedalaman",
-          "summary_when": "Pagi dan Petang",
+          "summary_when": "Petang",
           "min": 24,
           "max": 33
         },
